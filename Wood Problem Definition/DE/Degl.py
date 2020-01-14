@@ -240,114 +240,126 @@ class Degl:
         else:
             self.CurennetFitness[:] = [self.ObjectiveFcn(self.z[i,:]) for i in range(n)]
     
-        
+
+    
     def optimize( self ):
+       
         """ Runs the iterative process on the initialized swarm. """
         nVars = self.nVars
         
         #find radius
-        k = self.D * self.Nf # Neighborhood size
-                
+        k = round(self.D * self.Nf) # Neighborhood size
+        print("To k einai: %f" %k)
         # start the iteration
         doStop = False
         
         while not doStop:
             self.Iteration += 1
-            
-            #Calculate weight w through eq. (6)
-            #w = w min + (w max − w min ) *(t − 1) / (I max − 1)
+            #Calculate weight w through eq. (6) => w = w min + (w max − w min ) *(t − 1) / (I max − 1)
             
             w = self.w_min+(self.w_max-self.w_min)*(self.Iteration-1)/(self.MaxIterations-1) 
-            
-            #MEXRI EDO 13/1
-            
-            for p in range(self.D):
-                # find neighbors
-                neighbors = np.random.choice( self.D-1, size=self.AdaptiveNeighborhoodSize, replace=False)
-                neighbors[neighbors >= p] += 1; # do not select itself, i.e., index p
+          
+             #-------------------start of loop through ensemble------------------------
+            for i in range(0, self.D):
                 
-                bInd = self.PreviousBestFitness[neighbors].argmin()
-                bestNeighbor = neighbors[bInd]
+                #Mutate using eq. (3)–(5)!new vectoryi
+              
+                result_array = np.array([l for l in range((i-k),(i+k))])  
                 
+                result_array[result_array<0] = result_array[result_array<0] + self.D
                 
-                # update velocity
-                randSelf = np.random.rand(nVars)
-                randSocial = np.random.rand(nVars)
-                self.Velocity[p,:] = self.AdaptiveInertia * self.Velocity[p,:] \
-                    + selfWeight * randSelf * (self.PreviousBestPosition[p,:] - self.Swarm[p,:]) \
-                    + socialWeight * randSocial * (self.PreviousBestPosition[bestNeighbor,:] - self.Swarm[p,:])
+                result_array[result_array>(self.D-1)]=result_array[result_array>(self.D-1)] -self.D 
                 
-                # update position
-                self.Swarm[p,:] += self.Velocity[p,:]
+                print(result_array)
                 
-                # check bounds violation
-                posInvalid = self.Swarm[p,:] < self.LowerBounds
-                self.Swarm[p,posInvalid] = self.LowerBounds[posInvalid]
-                self.Velocity[p,posInvalid] = 0.0
+                self.mutation()
+#                
+#                # find neighbors
+#                neighbors = np.random.choice( self.D-1, size=self.AdaptiveNeighborhoodSize, replace=False)
+#                neighbors[neighbors >= i] += 1; # do not select itself, i.e., index i
+#                
+#                bInd = self.PreviousBestFitness[neighbors].argmin()
+#                bestNeighbor = neighbors[bInd]
+#                
                 
-                posInvalid = self.Swarm[p,:] > self.UpperBounds
-                self.Swarm[p,posInvalid] = self.UpperBounds[posInvalid]
-                self.Velocity[p,posInvalid] = 0.0
-            
-            
-            # calculate new fitness & update best
-            self.__evaluateDE()
-            particlesProgressed = self.CurennetFitness < self.PreviousBestFitness
-            self.PreviousBestPosition[particlesProgressed, :] = self.Swarm[particlesProgressed, :]
-            self.PreviousBestFitness[particlesProgressed] = self.CurennetFitness[particlesProgressed]
-            
-            # update global best, adaptive neighborhood size and stall counter
-            newBestInd = self.CurennetFitness.argmin()
-            newBestFit = self.CurennetFitness[newBestInd]
-            
-            if newBestFit < self.GlobalBestFitness:
-                self.GlobalBestFitness = newBestFit
-                self.GlobalBestPosition = self.Swarm[newBestInd, :].copy()
-                
-                self.StallCounter = max(0, self.StallCounter-1)
-                self.AdaptiveNeighborhoodSize = self.MinNeighborhoodSize
-                
-                if self.StallCounter < 2:
-                    self.AdaptiveInertia *= 2.0
-                else:
-                    self.AdaptiveInertia /= 2.0;
-                
-                self.AdaptiveInertia = max( self.InertiaRange[0], min(self.InertiaRange[1], self.AdaptiveInertia) )
-            else:
-                self.StallCounter += 1
-                self.AdaptiveNeighborhoodSize = min(
-                        self.AdaptiveNeighborhoodSize+self.MinNeighborhoodSize, nParticles-1 )
-            # first element of self.GlobalBestSoFarFitnesses is for self.Iteration == -1
-            self.GlobalBestSoFarFitnesses[self.Iteration+1] = self.GlobalBestFitness
-            
-            # run output function and stop if necessary
-            if self.OutputFcn and self.OutputFcn(self):
-                self.StopReason = 'OutputFcn requested to stop.'
-                doStop = True
-                continue
-            
-            # stop if max iterations
-            if self.Iteration >= self.MaxIterations-1:
-                self.StopReason = 'MaxIterations reached.'
-                doStop = True
-                continue
-            
-            # stop if insignificant improvement
-            if self.Iteration > self.MaxStallIterations:
-                # The minimum global best fitness is the one stored in self.GlobalBestSoFarFitnesses[self.Iteration+1]
-                # (only updated if newBestFit is less than the previously stored). The maximum (may be equal to the 
-                # current) is the one  in self.GlobalBestSoFarFitnesses MaxStallIterations before.
-                minBestFitness = self.GlobalBestSoFarFitnesses[self.Iteration+1]
-                maxPastBestFit = self.GlobalBestSoFarFitnesses[self.Iteration+1-self.MaxStallIterations]
-                if (maxPastBestFit == 0.0) and (minBestFitness < maxPastBestFit):
-                    windowProgress = np.inf  # don't stop
-                elif (maxPastBestFit == 0.0) and (minBestFitness == 0.0):
-                    windowProgress = 0.0  # not progressed
-                else:
-                    windowProgress = abs(minBestFitness - maxPastBestFit) / abs(maxPastBestFit)
-                if windowProgress <= self.FunctionTolerance:
-                    self.StopReason = 'Population did not improve significantly the last MaxStallIterations.'
-                    doStop = True
+#                # update velocity
+#                randSelf = np.random.rand(nVars)
+#                randSocial = np.random.rand(nVars)
+#                self.Velocity[i,:] = self.AdaptiveInertia * self.Velocity[i,:] \
+#                    + selfWeight * randSelf * (self.PreviousBestPosition[i,:] - self.Swarm[i,:]) \
+#                    + socialWeight * randSocial * (self.PreviousBestPosition[bestNeighbor,:] - self.Swarm[i,:])
+#                
+#                # update position
+#                self.Swarm[i,:] += self.Velocity[p,:]
+#                
+#                # check bounds violation
+#                posInvalid = self.Swarm[i,:] < self.LowerBounds
+#                self.Swarm[i,posInvalid] = self.LowerBounds[posInvalid]
+#                self.Velocity[i,posInvalid] = 0.0
+#                
+#                posInvalid = self.Swarm[i,:] > self.UpperBounds
+#                self.Swarm[i,posInvalid] = self.UpperBounds[posInvalid]
+#                self.Velocity[i,posInvalid] = 0.0
+#            
+#            
+#            # calculate new fitness & update best
+#            self.__evaluateDE()
+#            particlesProgressed = self.CurennetFitness < self.PreviousBestFitness
+#            self.PreviousBestPosition[particlesProgressed, :] = self.Swarm[particlesProgressed, :]
+#            self.PreviousBestFitness[particlesProgressed] = self.CurennetFitness[particlesProgressed]
+#            
+#            # update global best, adaptive neighborhood size and stall counter
+#            newBestInd = self.CurennetFitness.argmin()
+#            newBestFit = self.CurennetFitness[newBestInd]
+#            
+#            if newBestFit < self.GlobalBestFitness:
+#                self.GlobalBestFitness = newBestFit
+#                self.GlobalBestPosition = self.Swarm[newBestInd, :].copy()
+#                
+#                self.StallCounter = max(0, self.StallCounter-1)
+#                self.AdaptiveNeighborhoodSize = self.MinNeighborhoodSize
+#                
+#                if self.StallCounter < 2:
+#                    self.AdaptiveInertia *= 2.0
+#                else:
+#                    self.AdaptiveInertia /= 2.0;
+#                
+#                self.AdaptiveInertia = max( self.InertiaRange[0], min(self.InertiaRange[1], self.AdaptiveInertia) )
+#            else:
+#                self.StallCounter += 1
+#                self.AdaptiveNeighborhoodSize = min(
+#                        self.AdaptiveNeighborhoodSize+self.MinNeighborhoodSize, nParticles-1 )
+#            # first element of self.GlobalBestSoFarFitnesses is for self.Iteration == -1
+#            self.GlobalBestSoFarFitnesses[self.Iteration+1] = self.GlobalBestFitness
+#            
+#            # run output function and stop if necessary
+#            if self.OutputFcn and self.OutputFcn(self):
+#                self.StopReason = 'OutputFcn requested to stop.'
+#                doStop = True
+#                continue
+#            
+#            # stop if max iterations
+#            if self.Iteration >= self.MaxIterations-1:
+#                self.StopReason = 'MaxIterations reached.'
+#                doStop = True
+#                continue
+#            
+#            # stop if insignificant improvement
+#            if self.Iteration > self.MaxStallIterations:
+#                # The minimum global best fitness is the one stored in self.GlobalBestSoFarFitnesses[self.Iteration+1]
+#                # (only updated if newBestFit is less than the previously stored). The maximum (may be equal to the 
+#                # current) is the one  in self.GlobalBestSoFarFitnesses MaxStallIterations before.
+#                minBestFitness = self.GlobalBestSoFarFitnesses[self.Iteration+1]
+#                maxPastBestFit = self.GlobalBestSoFarFitnesses[self.Iteration+1-self.MaxStallIterations]
+#                if (maxPastBestFit == 0.0) and (minBestFitness < maxPastBestFit):
+#                    windowProgress = np.inf  # don't stop
+#                elif (maxPastBestFit == 0.0) and (minBestFitness == 0.0):
+#                    windowProgress = 0.0  # not progressed
+#                else:
+#                    windowProgress = abs(minBestFitness - maxPastBestFit) / abs(maxPastBestFit)
+#                if windowProgress <= self.FunctionTolerance:
+#                    self.StopReason = 'Population did not improve significantly the last MaxStallIterations.'
+#                    doStop = True
             
         
         # print stop message

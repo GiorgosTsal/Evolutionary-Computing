@@ -92,31 +92,31 @@ class FigureObjects:
         self.fig.tight_layout()
     
     
-    def update(self, pso):
+    def update(self, degl):
         """ Updates the figure in each iteration provided a PSODynNeighborPSO object. """
         # pso.Iteration is the PSO initialization; setup the best-so-far fitness line xdata and ydata, now that 
         # we know MaxIterations
-        if pso.Iteration == -1:
+        if degl.Iteration == -1:
             xdata = np.arange(pso.MaxIterations+1)-1
             self.lineBestFit.set_xdata(xdata)
-            self.lineBestFit.set_ydata(pso.GlobalBestSoFarFitnesses)
+            self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
         
         # update global best point in 3D plot
-        self.line3DBest.set_xdata(pso.GlobalBestPosition[0])
-        self.line3DBest.set_ydata(pso.GlobalBestPosition[1])
-        self.line3DBest.set_3d_properties(pso.GlobalBestFitness)
+        self.line3DBest.set_xdata(degl.GlobalBestPosition[0])
+        self.line3DBest.set_ydata(degl.GlobalBestPosition[1])
+        self.line3DBest.set_3d_properties(degl.GlobalBestFitness)
         
-        # update global best point in 2D plot
-        self.line2DBest.set_xdata(pso.GlobalBestPosition[0])
-        self.line2DBest.set_ydata(pso.GlobalBestPosition[1])
-        self.ax2DBest.set_title('[{:.3f},{:.3f}]'.format(pso.GlobalBestPosition[0],pso.GlobalBestPosition[1]))
-        
-        # update current swarm's particels positions in 2D plot
-        self.line2DSwarm.set_xdata(pso.Swarm[:,0])
-        self.line2DSwarm.set_ydata(pso.Swarm[:,1])
+#        # update global best point in 2D plot
+#        self.line2DBest.set_xdata(degl.GlobalBestPosition[0])
+#        self.line2DBest.set_ydata(degl.GlobalBestPosition[1])
+#        self.ax2DBest.set_title('[{:.3f},{:.3f}]'.format(degl.GlobalBestPosition[0],degl.GlobalBestPosition[1]))
+#        
+#        # update current swarm's particels positions in 2D plot
+#        self.line2DSwarm.set_xdata(degl.Swarm[:,0])
+#        self.line2DSwarm.set_ydata(degl.Swarm[:,1])
         
         # update the global best fitness line (remember, -1 is for initialization == iteration 0)
-        self.lineBestFit.set_ydata(pso.GlobalBestSoFarFitnesses)
+        self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
         self.axBestFit.relim()
         self.axBestFit.autoscale_view()
         self.axBestFit.title.set_text('Best-so-far global best fitness: {:g}'.format(pso.GlobalBestFitness))
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     # demanding objective functions. Requires the joblib package to be installed.
     # MaxStallIterations=20 is the default. Check how the algorithms performs for larger MaxStallIterations 
     # (e.g., 100 or 200).
-    pso = DynNeighborPSO(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
+    pso = Degl(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=20)
     pso.optimize()
     
