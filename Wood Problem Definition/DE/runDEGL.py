@@ -51,18 +51,27 @@ class FigureObjects:
         assert np.isscalar(LowerBound), "The input argument LowerBound must be scalar."
         assert np.isscalar(UpperBound), "The input argument LowerBound must be scalar."
         
-        # create the peaks data
+        # # create the peaks data
         nPoints = 100
         space = np.linspace(LowerBound, UpperBound, nPoints)
         xx, yy = np.meshgrid(space,space)
         
-        # np.ravel gets the data as a 1D array (raw internal storage), so zz is a 1D arrray and then we reshape it 
-        # to match xx & yy dimensions
+        # # np.ravel gets the data as a 1D array (raw internal storage), so zz is a 1D arrray and then we reshape it 
+        # # to match xx & yy dimensions
         zz = np.array( [ObjectiveFcn([x,y]) for x,y in zip(np.ravel(xx), np.ravel(yy)) ] )
         zz = zz.reshape(xx.shape)
-        
+       
         # figure
         self.fig = plt.figure()
+        # self.ax[0] = plt.subplot(211)
+        
+        # self.ax[0].set_title('Best-so-far global best fitness: {:g}'.format(np.nan))
+        # self.lineBestFit, = self.ax[0].plot([], [])
+        
+        # auto-arrange subplots to avoid overlappings and show the plot
+        # 3 subplots : 1: fitness , 2: newOrder, 3: Remaining (for current fitness and positions)
+ 
+        #self.fig.tight_layout()
         
         # 3D axis: the peaks surface & global best point
         cmap = 'gist_earth'
@@ -77,7 +86,7 @@ class FigureObjects:
         self.ax2DBest = self.fig.add_subplot(222)
         self.countour2D = self.ax2DBest.contour(xx, yy, zz, levels=30, cmap=cmap, linewidths=1)
         self.line2DSwarm, = self.ax2DBest.plot([np.nan], [np.nan], linestyle='', 
-                                               color='k', marker='o', markersize=2, markerfacecolor='k')
+                                                color='k', marker='o', markersize=2, markerfacecolor='k')
         self.line2DBest, = self.ax2DBest.plot([np.nan], [np.nan], linestyle='', 
                                                 color='r', marker='o', markersize=4, markerfacecolor='r')
         self.ax2DBest.set_title(f'[{np.NaN},{np.NaN}]') # title is best-so-far position as [x,y]
@@ -97,7 +106,7 @@ class FigureObjects:
         # pso.Iteration is the PSO initialization; setup the best-so-far fitness line xdata and ydata, now that 
         # we know MaxIterations
         if degl.Iteration == -1:
-            xdata = np.arange(pso.MaxIterations+1)-1
+            xdata = np.arange(degl.MaxIterations+1)-1
             self.lineBestFit.set_xdata(xdata)
             self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
         
@@ -106,20 +115,20 @@ class FigureObjects:
         self.line3DBest.set_ydata(degl.GlobalBestPosition[1])
         self.line3DBest.set_3d_properties(degl.GlobalBestFitness)
         
-#        # update global best point in 2D plot
-#        self.line2DBest.set_xdata(degl.GlobalBestPosition[0])
-#        self.line2DBest.set_ydata(degl.GlobalBestPosition[1])
-#        self.ax2DBest.set_title('[{:.3f},{:.3f}]'.format(degl.GlobalBestPosition[0],degl.GlobalBestPosition[1]))
-#        
-#        # update current swarm's particels positions in 2D plot
-#        self.line2DSwarm.set_xdata(degl.Swarm[:,0])
-#        self.line2DSwarm.set_ydata(degl.Swarm[:,1])
+        # update global best point in 2D plot
+        self.line2DBest.set_xdata(degl.GlobalBestPosition[0])
+        self.line2DBest.set_ydata(degl.GlobalBestPosition[1])
+        self.ax2DBest.set_title('[{:.3f},{:.3f}]'.format(degl.GlobalBestPosition[0],degl.GlobalBestPosition[1]))
+        
+        # # update current swarm's particels positions in 2D plot
+        # self.line2DSwarm.set_xdata(degl.D[:,0])
+        # self.line2DSwarm.set_ydata(degl.D[:,1])
         
         # update the global best fitness line (remember, -1 is for initialization == iteration 0)
         self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
         self.axBestFit.relim()
         self.axBestFit.autoscale_view()
-        self.axBestFit.title.set_text('Best-so-far global best fitness: {:g}'.format(pso.GlobalBestFitness))
+        self.axBestFit.title.set_text('Best-so-far global best fitness: {:g}'.format(degl.GlobalBestFitness))
         
         # because of title and particles positions changing, we cannot update specific artists only (the figure
         # background needs updating); redrawing the whole figure canvas is expensive but we have to
@@ -130,16 +139,16 @@ class FigureObjects:
 
 
 
-def OutputFcn(pso, figObj):
+def OutputFcn(degl, figObj):
     """ Our output function: updates the figure object and prints best fitness on terminal.
         
         Always returns False (== don't stop the iterative process)
     """
-    if pso.Iteration == -1:
+    if degl.Iteration == -1:
         print('Iter.    Global best')
-    print('{0:5d}    {1:.5f}'.format(pso.Iteration, pso.GlobalBestFitness))
+    print('{0:5d}    {1:.5f}'.format(degl.Iteration, degl.GlobalBestFitness))
     
-    figObj.update(pso)
+    figObj.update(degl)
     
     return False
 
@@ -149,11 +158,13 @@ def OutputFcn(pso, figObj):
 if __name__ == "__main__":
     """ Executed only when the file is run as a script. """
     
+   
+   
     # in case somebody tries to run it from the command line directly...
     plt.ion()
     
     # uncomment the following line to get the same results in each execution
-#    np.random.seed(13)
+    np.random.seed(1)
     
     nVars = 2
     
@@ -171,7 +182,8 @@ if __name__ == "__main__":
     # demanding objective functions. Requires the joblib package to be installed.
     # MaxStallIterations=20 is the default. Check how the algorithms performs for larger MaxStallIterations 
     # (e.g., 100 or 200).
-    pso = Degl(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
+    degl = Degl(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=20)
-    pso.optimize()
+    degl.wtf()
+    degl.optimize()
     
