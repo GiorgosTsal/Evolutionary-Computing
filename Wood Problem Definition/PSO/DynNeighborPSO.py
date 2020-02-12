@@ -8,6 +8,7 @@ Global Optimization Toolbox.
 
 import numpy as np
 import warnings
+import shapely
 
 try:
     from joblib import Parallel, delayed
@@ -15,8 +16,45 @@ try:
     HaveJoblib = True
 except ImportError:
     HaveJoblib = False
-
-
+    
+    
+    
+def extract_obj( pso ):
+        
+        particle = pso.GlobalBestPosition
+        
+        newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(pso.Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(pso.Order))]
+        """remaining = pso.Stock    
+        for i in range(0,len(newOrder)):
+            for p in newOrder:
+                remaining = remaining.difference(p)"""
+        unionNewOrder=shapely.ops.cascaded_union(newOrder)
+         
+        remaining = (pso.Stock).difference(unionNewOrder)
+        # prevent errors in case that difference results in invalid or empty polygons
+        if(remaining.is_valid==False):
+            #print(remaining.is_valid)
+            remaining.buffer(0)
+        if(remaining.is_empty==True):
+            #print("empty=%d"%remaining.is_empty)
+            remaining.buffer(0)
+                
+        if(unionNewOrder.is_valid==False):
+            #print(unionNewOrder.is_valid)
+            unionNewOrder.buffer(0)
+        if(unionNewOrder.is_empty==True):
+            #print("empty=%d"%difUnionNewOrder.is_empty)
+            unionNewOrder.buffer(0)
+            
+        difUnionNewOrder=unionNewOrder.difference(pso.Stock) # take newOrder out of stock - inverse of remaining
+        if(difUnionNewOrder.is_valid==False):
+            #print(difUnionNewOrder.is_valid)
+            difUnionNewOrder.buffer(0)
+        if(difUnionNewOrder.is_empty==True):
+            #print("empty=%d"%difUnionNewOrder.is_empty)
+            difUnionNewOrder.buffer(0)        
+        return [newOrder,remaining]
+    
 
 class DynNeighborPSO:
     """ Particle swarm minimization algorithm with dynamic random neighborhood topology.
@@ -70,6 +108,10 @@ class DynNeighborPSO:
                 , MaxStallIterations = 20
                 , OutputFcn = None
                 , UseParallel = False
+                , Stock = None
+                , Order = None
+                , remaining = None
+                , newOrder = None
                 ):
         """ The object is initialized with two mandatory positional arguments:
                 o ObjectiveFcn: function object that accepts a vector (the particle) and returns the scalar fitness 
@@ -108,6 +150,10 @@ class DynNeighborPSO:
         """
         self.ObjectiveFcn = ObjectiveFcn
         self.nVars = nVars
+        self.Order=Order
+        self.Stock = Stock
+        self.remaining = remaining
+        self.newOrder = newOrder
         
         # assert options validity (simple checks only) & store them in the object
         if SwarmSize is None:
@@ -235,10 +281,9 @@ class DynNeighborPSO:
         if self.UseParallel:
             nCores = multiprocessing.cpu_count()
             self.CurrentSwarmFitness[:] = Parallel(n_jobs=nCores)( 
-                    delayed(self.ObjectiveFcn)(self.Swarm[i,:]) for i in range(nParticles) )
+                    delayed(self.ObjectiveFcn)(self.Swarm[i,:],self.nVars,self.Stock,self.Order) for i in range(nParticles) )
         else:
-            self.CurrentSwarmFitness[:] = [self.ObjectiveFcn(self.Swarm[i,:]) for i in range(nParticles)]
-    
+            self.CurrentSwarmFitness[:] = [self.ObjectiveFcn(self.Swarm[i,:],self.nVars,self.Stock,self.Order) for i in range(nParticles)]
         
     def optimize( self ):
         """ Runs the iterative process on the initialized swarm. """
@@ -305,6 +350,7 @@ class DynNeighborPSO:
                     self.AdaptiveInertia /= 2.0;
                 
                 self.AdaptiveInertia = max( self.InertiaRange[0], min(self.InertiaRange[1], self.AdaptiveInertia) )
+                [self.newOrder,self.remaining] = extract_obj(self)
             else:
                 self.StallCounter += 1
                 self.AdaptiveNeighborhoodSize = min(
