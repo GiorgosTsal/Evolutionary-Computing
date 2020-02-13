@@ -20,7 +20,7 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 ```
 pip install Shapely
 ```
-or
+	or
 ```
 conda install -c ”conda-forge” shapely
 ```
@@ -30,20 +30,20 @@ conda install -c ”conda-forge” shapely
 ```
 pip install descartes
 ```
-or
+	or
 ```
 conda install -c conda-forge descartes 
 ```
 
 ## Running the tests
 
-In order to run ** Particle Swarm Optimization ** automated tests and results:
+* In order to run ** Particle Swarm Optimization ** automated tests and results:
 1) Navigate to  Evolutionary-Computing/Wood Problem Definition/PSO
 
 2) Execute ``` python main.py ``` from the command line.
 
 
-In order to run ** Differential Evolution ** automated tests and results:
+* In order to run ** Differential Evolution ** automated tests and results:
 1) Navigate to  Evolutionary-Computing/Wood Problem Definition/DE
 
 2) Execute ``` python main.py ``` from the command line.
@@ -51,7 +51,7 @@ In order to run ** Differential Evolution ** automated tests and results:
 
 ## Authors
 
-* **Giorgos Tsalidis** - [PurpleBooth](https://github.com/PurpleBooth)
+* **Giorgos Tsalidis** - [LinkedIn Profile](https://gr.linkedin.com/in/tsalidis-giorgos)
 
 
 ## License
@@ -75,7 +75,7 @@ http://www.sciencedirect.com/science/article/pii/S0020025509005192 (p. 3)
 [4] M. Dorigo and T. Stützle, Ant Colony Optimization, ser. Bradford Books. Cambridge, MA, USA:
 MIT Press, Jun. 2004. (page 6)
 
-### libraries and tools:
+### Libraries and tools:
 
 * https://github.com/Toblerity/Shapely
 * https://github.com/andim/noisyopt
