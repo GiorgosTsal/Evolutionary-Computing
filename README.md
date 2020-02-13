@@ -20,7 +20,7 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 ```
 pip install Shapely
 ```
-	or
+or
 ```
 conda install -c ”conda-forge” shapely
 ```
@@ -30,20 +30,20 @@ conda install -c ”conda-forge” shapely
 ```
 pip install descartes
 ```
-	or
+or
 ```
 conda install -c conda-forge descartes 
 ```
 
 ## Running the tests
 
-* In order to run ** Particle Swarm Optimization ** automated tests and results:
+In order to run ** Particle Swarm Optimization ** automated tests and results:
 1) Navigate to  Evolutionary-Computing/Wood Problem Definition/PSO
 
 2) Execute ``` python main.py ``` from the command line.
 
 
-* In order to run ** Differential Evolution ** automated tests and results:
+In order to run ** Differential Evolution ** automated tests and results:
 1) Navigate to  Evolutionary-Computing/Wood Problem Definition/DE
 
 2) Execute ``` python main.py ``` from the command line.
@@ -51,7 +51,7 @@ conda install -c conda-forge descartes
 
 ## Authors
 
-* **Giorgos Tsalidis** - [LinkedIn Profile](https://gr.linkedin.com/in/tsalidis-giorgos)
+* **Giorgos Tsalidis** - [LinkedIn ](https://gr.linkedin.com/in/tsalidis-giorgos)
 
 
 ## License
