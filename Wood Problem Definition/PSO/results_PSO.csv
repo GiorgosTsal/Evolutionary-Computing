@@ -69,3 +69,39 @@ Experiment on:13/02/2020 16:32:04
 ---- Time taken: 184.17632722854614 seconds ----
 Polygons fitted=17 out of 17.
 Number of Iterations (avg) = (54.937500)
+Experiment on:13/02/2020 21:12:40
+
+ =================== RESULTS ===================
+
+---- Time taken: 166.6491298675537 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (50.380952)
+Experiment on:13/02/2020 21:24:46
+
+ =================== RESULTS ===================
+
+---- Time taken: 266.000497341156 seconds ----
+Polygons fitted=16 out of 17.
+Number of Iterations (avg) = (45.205128)
+Experiment on:13/02/2020 21:33:10
+
+ =================== RESULTS ===================
+
+---- Time taken: 192.5525186061859 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (48.666667)
+Experiment on:13/02/2020 21:51:18
+
+ =================== RESULTS ===================
+
+---- Time taken: 203.41881322860718 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (59.500000)
+Experiment on:13/02/2020 22:07:11
+w_f_OUT:1000.00, w_f_OVERLAP=1000.00, w_f_ATTR=0.010000, w_f_SMO=15.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 144.84178018569946 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (51.250000)
