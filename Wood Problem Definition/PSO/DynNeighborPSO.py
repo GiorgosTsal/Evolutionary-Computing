@@ -17,37 +17,14 @@ try:
 except ImportError:
     HaveJoblib = False
     
-    
-    
-def extract_obj( pso ):
         
-        particle = pso.GlobalBestPosition
-        
-        newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(pso.Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(pso.Order))]
-        
+def get_Data(pso):
+        particle = pso.GlobalBestPosition  
+        newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(pso.Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(pso.Order))]  
         unionNewOrder=shapely.ops.cascaded_union(newOrder)
-         
         remaining = (pso.Stock).difference(unionNewOrder)
-        # prevent errors in case that difference results in invalid or empty polygons
-        if(remaining.is_valid==False):
-            remaining.buffer(0)
-        if(remaining.is_empty==True):
-            remaining.buffer(0)
-                
-        if(unionNewOrder.is_valid==False):
-            #print(unionNewOrder.is_valid)
-            unionNewOrder.buffer(0)
-        if(unionNewOrder.is_empty==True):
-            unionNewOrder.buffer(0)
-            
-        difUnionNewOrder=unionNewOrder.difference(pso.Stock) # take newOrder out of stock - inverse of remaining
-        if(difUnionNewOrder.is_valid==False):
-            difUnionNewOrder.buffer(0)
-        if(difUnionNewOrder.is_empty==True):
-            difUnionNewOrder.buffer(0) 
-            
+        
         return [newOrder,remaining]
-    
 
 class DynNeighborPSO:
     """ Particle swarm minimization algorithm with dynamic random neighborhood topology.
@@ -264,8 +241,8 @@ class DynNeighborPSO:
         # call output function, but neglect the returned stop flag
         if self.OutputFcn:
             self.OutputFcn(self)
-    
-    
+        
+
     def __evaluateSwarm(self):
         """ Helper private member function that evaluates the population, by calling ObjectiveFcn either in serial or
             parallel mode, depending on the UseParallel option during initialization.
@@ -343,7 +320,7 @@ class DynNeighborPSO:
                     self.AdaptiveInertia /= 2.0;
                 
                 self.AdaptiveInertia = max( self.InertiaRange[0], min(self.InertiaRange[1], self.AdaptiveInertia) )
-                [self.newOrder,self.remaining] = extract_obj(self)
+                [self.newOrder,self.remaining] = get_Data(self)
             else:
                 self.StallCounter += 1
                 self.AdaptiveNeighborhoodSize = min(

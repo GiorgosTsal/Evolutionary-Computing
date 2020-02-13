@@ -8,20 +8,12 @@ Created on Wed Jan 29 14:18:31 2020
 # %% Libraries
 
 from WoodProblemDefinition import Stock, Order1, Order2, Order3
-from shapely.geometry import Point
-
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.collections as pltcol
-import math
 from datetime import datetime
 import shapely
 from descartes import PolygonPatch
-from shapely.ops import cascaded_union
-# This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits.mplot3d import Axes3D
-
 from DynNeighborPSO import DynNeighborPSO
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
