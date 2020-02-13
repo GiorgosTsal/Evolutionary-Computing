@@ -24,35 +24,28 @@ def extract_obj( pso ):
         particle = pso.GlobalBestPosition
         
         newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(pso.Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(pso.Order))]
-        """remaining = pso.Stock    
-        for i in range(0,len(newOrder)):
-            for p in newOrder:
-                remaining = remaining.difference(p)"""
+        
         unionNewOrder=shapely.ops.cascaded_union(newOrder)
          
         remaining = (pso.Stock).difference(unionNewOrder)
         # prevent errors in case that difference results in invalid or empty polygons
         if(remaining.is_valid==False):
-            #print(remaining.is_valid)
             remaining.buffer(0)
         if(remaining.is_empty==True):
-            #print("empty=%d"%remaining.is_empty)
             remaining.buffer(0)
                 
         if(unionNewOrder.is_valid==False):
             #print(unionNewOrder.is_valid)
             unionNewOrder.buffer(0)
         if(unionNewOrder.is_empty==True):
-            #print("empty=%d"%difUnionNewOrder.is_empty)
             unionNewOrder.buffer(0)
             
         difUnionNewOrder=unionNewOrder.difference(pso.Stock) # take newOrder out of stock - inverse of remaining
         if(difUnionNewOrder.is_valid==False):
-            #print(difUnionNewOrder.is_valid)
             difUnionNewOrder.buffer(0)
         if(difUnionNewOrder.is_empty==True):
-            #print("empty=%d"%difUnionNewOrder.is_empty)
-            difUnionNewOrder.buffer(0)        
+            difUnionNewOrder.buffer(0) 
+            
         return [newOrder,remaining]
     
 

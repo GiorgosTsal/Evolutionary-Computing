@@ -5,14 +5,17 @@ Created on Wed Jan 29 14:18:31 2020
 
 @author: gtsal
 """
+# %% Libraries
 
 from WoodProblemDefinition import Stock, Order1, Order2, Order3
 from shapely.geometry import Point
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.collections as pltcol
 import math
+from datetime import datetime
 import shapely
 from descartes import PolygonPatch
 from shapely.ops import cascaded_union
@@ -21,7 +24,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from DynNeighborPSO import DynNeighborPSO
 
-# Simple helper class for getting matplotlib patches from shapely polygons with different face colors
+# %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors
     CMapColors = np.array([
@@ -71,15 +74,15 @@ class PlotPatchHelper:
     
     # Alpha controls the opaqueness, Gamma how darker the edge line will be and LineWidth its weight
     def __init__(self, Gamma=1.3, Alpha=0.9, LineWidth=2.0):
-        self.Counter = 0
+        self.count = 0
         self.Gamma = Gamma          # darker edge color if Gamma>1 -> faceColor ** Gamma; use np.inf for black
         self.Alpha = Alpha          # opaqueness level (1-transparency)
         self.LineWidth = LineWidth  # edge weight
     
     # circles through the colormap and returns the FaceColor and the EdgeColor (as FaceColor^Gamma)
     def nextcolor(self):
-        col = self.CMapColors[self.Counter,:].copy()
-        self.Counter = (self.Counter+1) % self.CMapColors.shape[0]
+        col = self.CMapColors[self.count,:].copy()
+        self.count = (self.count+1) % self.CMapColors.shape[0]
         return (col, col**self.Gamma)
     
     # returns a list of matplotlib.patches.PathPatch from the provided shapely polygons, using descartes; a list is 
@@ -101,7 +104,7 @@ class PlotPatchHelper:
 def plotShapelyPoly(ax, poly, **kwargs):
     return [ax.add_patch(p) for p in PlotPatchHelper(**kwargs).get_patches(poly)]
 
-
+# %% Fitness Function 
 
 def ObjectiveFcnNew(particle,nVars,Stock,Order):
 #    res=0
@@ -120,6 +123,7 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
 #    
 #    res = difUnionNewOrder.area*10000 + difArea* 10000 +dist_from_zero*10
 #    return res
+    
 #    """ MATLAB's peaks function -> objective (fitness function) """
 #
     res=0
@@ -143,7 +147,7 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
 
     return res
 
-
+# %% Class for storing and updating the figure's objects
 class FigureObjects:
     """ Class for storing and updating the figure's objects.
         
@@ -236,48 +240,61 @@ def OutputFcn(pso, figObj):
     
     return False
     
-
+# %% Main
+    
 if __name__ == "__main__":
     # in case someone tries to run it from the command-line...
     plt.ion()
     #np.random.seed(1)
     
-   
-    orderList = [Order1, Order2, Order3] #all orders
-    numPolygons=sum([len(Order1), len(Order2), len(Order3)])
+    #Start calculating time in order to calculate converge time
+    start_time = time.time()
     
-    finalList=[] 
-    finalListPerStock=[]
-    notFittedList=[]
+    orders = [Order1, Order2, Order3] #Store all orders into a list
+    shapesTotal=sum([len(Order1), len(Order2), len(Order3)]) #get number of polygons
+    
+    resList=[] 
+    resListPerStock=[]
+    nonFitted=[]
 
-    orderN = len(orderList)
-    remaining = Stock.copy()
+    orderN = len(orders)
+    # Copy Stock into remainning varaible
+    remaining = Stock.copy() 
     remainingN= len(remaining)
-    counter=0
-    polygonsFitted=0
+    count=0
+    shapesF=0
     iterationsList=[]
-    while (orderList):
-        fitted = 0
-        counter=counter+1
-        currentOrder = orderList[0] # define current Order (it may be a part of order that was split)
-        # save sum of areas of current order's parts
-        currentOrderArea= sum([currentOrder[w].area for w in range(0,len(currentOrder))])
-        #currentOrderArea = cascaded_union(currentOrder).area
-        # save area of each remaining
-        remainingsArea = np.array([remaining[k].area for k in range(0,len(remaining))])
+    #runs as long as the order list is not empty
+    while (orders):
+        # a flag indicating whether the order has been fulfilled
+        flag = False
+        count=count+1
+        tolerance = 1e-4
+        
+        # place the 1st order as current and starting calculations
+        currentOrder = orders[0]
+        
+        #Calculate the sum of the areas of the order shapes
+        currentOrderArea= sum([currentOrder[w].area for w in range(0,len(currentOrder))]) 
+        #table with the size of the stock(remainings)
+        remainingsArea = np.array([remaining[k].area for k in range(0,len(remaining))]) 
+        
         # [x,y,theta] for each part so 3* len(currentOrder)
         nVars = len(currentOrder) * 3
-        # find which stocks have bigger area than the order's area calculated
-        # and keep them as possible solutions
-        # try to fit order in them starting by the smallest one
-        bigEnough=(np.where(remainingsArea>currentOrderArea))[0]
-        realIndexes = np.argsort(remainingsArea[bigEnough])
-        bigEnough=bigEnough[realIndexes]
-        print(bigEnough)
-        for stockIndex in bigEnough:
-            print("Try Stockindex=%d   -> OrderIndex=%d"% (stockIndex,counter))
+        # a list of stocks that have a larger area than the order and the order of the smallest,
+        # meaning that if the order eventually fits, it will leave less unused space in the stock for the larger
+        shapeIdx=(np.where(remainingsArea>currentOrderArea))[0]
+        #the stocks are sorted in ascending order by area
+        indexes = np.argsort(remainingsArea[shapeIdx])
+        shapeIdx=shapeIdx[indexes]
+        print("Shape Indexes\n")
+        print(shapeIdx)
+       
+        # this for scans the stocks shapeIdx list
+        for stockIdx in shapeIdx:
+            print("Try stockIdx=%d   -> Order=%d"% (stockIdx,count))
             # set currentStock for pso the stocks-remainings from the local list
-            currentStock = remaining[stockIndex]
+            currentStock = remaining[stockIdx]
             # Set lower and upper bounds for the 3 variables for each particle
             # as the bounds of stocks
             (minx, miny, maxx, maxy) = currentStock.bounds
@@ -301,94 +318,124 @@ if __name__ == "__main__":
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
     
             pso.optimize()
-            # get result and temporary apply the transformations
-            resultPositions = pso.GlobalBestPosition
+            # the possible locations of the order shapes
+            # the implementation of the transformations results in the ordering of new positions
+            pos = pso.GlobalBestPosition
             newOrder = [ shapely.affinity.rotate( 
-                    shapely.affinity.translate(currentOrder[k], xoff=resultPositions[k*3], yoff=resultPositions[k*3+1]), 
-                    resultPositions[k*3+2], origin='centroid') for k in range(len(currentOrder))]
+                    shapely.affinity.translate(currentOrder[k], xoff=pos[k*3], yoff=pos[k*3+1]), 
+                    pos[k*3+2], origin='centroid') for k in range(len(currentOrder))]
             iterationsList.append(pso.Iteration)
-            #if (xwrese )
-            # find if the current order was placed inside the currentStock
-            # if area of difference of currentStock from union of order is bigger than a tolerance
-            # go to next choice
+           
+            
+            # first check if the order is in stock.
             unionNewOrder=shapely.ops.cascaded_union(newOrder)
-            difUnionNewOrder=unionNewOrder.difference(currentStock) # take newOrder out of stock - inverse of remaining
-            if difUnionNewOrder.area >0.0001:
+            # take newOrder out of stock - inverse of remaining
+            difUnionNewOrder=unionNewOrder.difference(currentStock) 
+            # if this area is larger than the tolerance 
+            # then the current solution is not acceptable and the resume continues for the same order as the next stock in the list  
+            if difUnionNewOrder.area >tolerance:
                 continue
             
-            # check if there is overlap and skip
+            # secondly check if there is an overlap and skip
             # overlap area is equal with sumOfArea - areaOfUnion
             areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))])
+            #the difference of the area (sum of areas) of the shapes of the order minus the area of ​​the union of the shapes of the order
             difArea = areaSum-unionNewOrder.area
-            if difArea > 0.0001:
+            # if this area is larger than the tolerance 
+            #then the current solution is not acceptable and the resume continues for the same order as the next stock in the list    
+            if difArea > tolerance:
                 continue
             
 
-            # this part of code is executed only if there is no overlap and no polygons out of stock and then it breaks the inner loop 
-            fitted=1
+            # if both of the two conditions are fullfilled (if the order is in stock and not overalaping)
+            flag=True
             for p in newOrder:
-                remaining[stockIndex] = remaining[stockIndex].difference(p)
-            
+                #parts of the order are removed from stock
+                remaining[stockIdx] = remaining[stockIdx].difference(p)
             break
-        #if polygons don't fit then split order in 2 parts
-        if (fitted==0):
-            #orderList.remove(currentOrder)
+        
+        
+        # if the order has not fit (in any of the possible stocks)
+        if not flag:
             if(int((len(currentOrder)/2))!=0):
                 temp1=(currentOrder[0:int((len(currentOrder)/2))])
                 temp2=(currentOrder[int((len(currentOrder)/2)):len(currentOrder)])
-                orderList = [temp1]+[temp2] + orderList[1:]
+                orders = [temp1]+[temp2] + orders[1:]
             else:
-                # if order contains only one polygon and cannot be fitted, it will add it to notFittedList and it will go to next order  
-                notFittedList.append(orderList[0])
-                orderList.remove(currentOrder)
-                
+                # If the placements are not correct then an order with a shape may not fit 
+                # then it is placed in a list of non-matching shapes and is removed from the orders
+                # Them continue to next order  
+                # cases where stocks are not sufficient for an order so they must be reinforced with new stocks
+                nonFitted.append(orders[0])
+                orders.remove(currentOrder)
+        # If we have a positive result and is placed correctly this current order will be stored 
+        # in a list of the positions that gave the correct result for each shape as well as in which stock        
         else:
-            # if polygons of current order is fitted, then increase the number of fitted polygons, append the parts of order in finalList, append the stockIndex and remove the fitted order
-            polygonsFitted=polygonsFitted+len(currentOrder)
-            finalList.append( newOrder)
-            finalListPerStock.append(stockIndex)
-            orderList.remove(currentOrder)
-            print("Fitted Stockindex=%d   -> OrderIndex=%d"% (stockIndex,counter))
+            # if polygons of current order is flag, 
+            # then increase the number of flag polygons, , 
+            # append the stockIdx and remove the flag order
+            shapesF=shapesF+len(currentOrder)
+            resList.append( newOrder) #append the parts of order in resList
+            resListPerStock.append(stockIdx)
+            orders.remove(currentOrder)
+            print("Flag stockIdx=%d   , Current order: %d"% (stockIdx,count))
 
     
-    
-    end = time.time()
+    print("\n\n =================== RESULTS ===================\n\n")
+    print("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
 
-    print("Polygons fitted=%d from %d polygon"%(polygonsFitted,numPolygons))
-    print("\nNumber of Iterations (mean,min,max) = (%f,%f,%f)"%(np.mean(iterationsList),np.min(iterationsList),np.max(iterationsList)))
-    # NOTE: the above operation is perhaps faster if we perform a cascade union first as below, check it on your code:
-    #remaining = Stock[6].difference(shapely.ops.cascaded_union(newOrder))
+    print("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
+    print("\nNumber of Iterations (avg) = (%f)"%(np.mean(iterationsList)))
+    print("\n")
+
+    #Write Results on file and append on each execution
+    f= open("results_PSO.csv","a+")
+    # datetime object containing current date and time
+    now = datetime.now()
+      
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    f.write("\n")
+    f.write("Experiment on:" + dt_string)	
+    f.write("\n")
+    
+    f.write("\n =================== RESULTS ===================\n")
+    f.write("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
+
+    f.write("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
+    f.write("\nNumber of Iterations (avg) = (%f)"%(np.mean(iterationsList)))
+         
+    f.close()
+    
     
     # Plot remainings
-    ind=0
+    idx=0
     fig, ax = plt.subplots(ncols=4,nrows=2, figsize=(16,9))
-    fig.canvas.set_window_title('Remainings- Polygons fitted=%d from %d polygons'%(polygonsFitted,numPolygons))
+    fig.canvas.set_window_title('Remainings- Polygons flag=%d from %d polygons'%(shapesF,shapesTotal))
     for i in range(0,len(Stock)):
         if i>=4:
-            ind=1
+            idx=1
         
-        plotShapelyPoly(ax[ind][i%4], remaining[i])
-        ax[ind][i%4].set_title('Remaining of Stock[%d]'%i)
+        plotShapelyPoly(ax[idx][i%4], remaining[i])
+        ax[idx][i%4].set_title('Remaining of Stock[%d]'%i)
         (minx, miny, maxx, maxy) = Stock[i].bounds
-        ax[ind][i%4].set_ylim(bottom=miny,top=maxy)
-        ax[ind][i%4].set_xlim(left=minx ,right=maxx)
-        #ax[ind][i%4].relim()
-        #ax[ind][i%4].autoscale_view()
-    
+        ax[idx][i%4].set_ylim(bottom=miny,top=maxy)
+        ax[idx][i%4].set_xlim(left=minx ,right=maxx)
+
     #Save figure with remainings
     import os 
-    file_name = "PSOfull.png"
-    if os.path.isfile(file_name):
+    name = "result_PSO.png"
+    if os.path.isfile(name):
         expand = 1
         while True:
             expand += 1
-            new_file_name = file_name.split(".png")[0] + str(expand) + ".png"
+            new_file_name = name.split(".png")[0] + "(" +str(expand) + ")" + ".png"
             if os.path.isfile(new_file_name):
                 continue
             else:
-                file_name = new_file_name
+                name = new_file_name
                 break
             
-    fig.savefig(file_name)
+    fig.savefig(name)
 
     
