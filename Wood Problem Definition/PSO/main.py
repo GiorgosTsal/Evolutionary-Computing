@@ -99,45 +99,53 @@ def plotShapelyPoly(ax, poly, **kwargs):
 # %% Fitness Function 
 
 def ObjectiveFcnNew(particle,nVars,Stock,Order):
-#    res=0
-#    newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(Order))] 
-#    unionNewOrder=shapely.ops.cascaded_union(newOrder)
-#    difUnionNewOrder=unionNewOrder.difference(Stock) # take newOrder out of stock - inverse of remaining
-#    
-#    existOverlap = 0
-#    areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))])
-#    difArea = areaSum-unionNewOrder.area
-#    
-#    dist_from_zero = sum([newOrder[i].area*(newOrder[i].centroid.y)+newOrder[i].centroid.x for i in range(0,len(newOrder))])
-#    
-#    existOverlap = round(existOverlap,5)
-#    dist_from_zero= round(dist_from_zero,6)
-#    
-#    res = difUnionNewOrder.area*10000 + difArea* 10000 +dist_from_zero*10
-#    return res
-    
-#    """ MATLAB's peaks function -> objective (fitness function) """
-#
-    res=0
-    newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(Order[j], xoff=particle[j*3], yoff=particle[j*3+1]),particle[j*3+2], origin='centroid') for j in range(len(Order))]
+
+    f=0
     remaining = Stock  
-    unionNewOrder=shapely.ops.cascaded_union(newOrder)
+    
+    newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(Order[j], 
+                                                                    xoff=particle[j*3], 
+                                                                    yoff=particle[j*3+1]),
+                                                                    particle[j*3+2], 
+                                                                    origin='centroid')
+                                                                    for j in range(len(Order))]
+    
+   
+    # This  fitness  component is used to prevent cutting of polygons outside the boundaries of each stock
+    unionNewOrder=shapely.ops.cascaded_union(newOrder) # the union of shapes with new positions and rotations
+    f_OUT=unionNewOrder.difference(Stock) # the difference of union with stock
+    
+    
+    # the goal is to avoid overlapping the polygons cut
+    # calculate the area of ​​the shapes overlapped by many shapes
+    areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))]) #the sum of the areas of the shapes of each order
+    # Overlap area is the difference of the sum of the areas of the shapes of each order form
+    # the UNION area of the individual shapes of the order with the placements of the proposed solution
+    f_OVERLAP = areaSum-unionNewOrder.area # if there is no overlap, the difference must be zero, and
+                                             #if such a difference expresses the overlapping portion
+                                             
+                                             
+    # Attraction of shapes to the (0,0) axis using areas
+    # Calculte the sum of the x's and the centroid of the shapes multiplied by the area of ​​the figure
+    f_ATTR = sum([newOrder[i].area*(newOrder[i].centroid.x+newOrder[i].centroid.y) for i in range(0,len(newOrder))])
+    
+    
+    # This  fitness  component  quantifies the  smoothness  of the  object  by  evaluating  the  shape  of its external  borders.  
+    # Objects  with  strongly irregular  shape  are  penalized, 
+    # to  avoid  the  simultaneous extraction of spatially distant regions of the same label. Initially, we compute the following ratio
     remaining = Stock.difference(unionNewOrder)
+    hull = remaining.convex_hull 
+    l = hull.area/remaining.area-1 # Objects with small λare nearly convex (𝜆=0for ideally convex) which is considered as the ideal shape of an object.
+    # Parameter αcontrols the slope of the function.
+    a = 1.11
+    # To obtain normalized fitness values in the range [0,1], the smoothness fitness is defined as follows
+    f_SMO = 1/(1+a*l)
     
-    outOfStock=unionNewOrder.difference(Stock) # take newOrder out of stock - inverse of remaining
-    areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))])
-    overlapArea = areaSum-unionNewOrder.area
     
-    dist_from_zero = sum([newOrder[i].area*(newOrder[i].centroid.x+newOrder[i].centroid.y) for i in range(0,len(newOrder))])
-    ch= (remaining.convex_hull)
-    lamda = (ch.area)/(remaining.area)-1
-    alpha = 1.11
-    fsm = 1/(1+alpha*lamda)
-    dist_from_zero= round(dist_from_zero,6)
+    # The overall fitness function is obtained by combining the above criteria
+    f = f_OUT.area*10000 + f_OVERLAP*10000  +f_ATTR*0.001 + 100*f_SMO
 
-    res = outOfStock.area*10000 + overlapArea*10000  +dist_from_zero/10*10 + 100*fsm
-
-    return res
+    return f
 
 # %% Class for storing and updating the figure's objects
 class FigureObjects:
@@ -268,23 +276,25 @@ if __name__ == "__main__":
         
         #Calculate the sum of the areas of the order shapes
         currentOrderArea= sum([currentOrder[w].area for w in range(0,len(currentOrder))]) 
+        
         #table with the size of the stock(remainings)
         remainingsArea = np.array([remaining[k].area for k in range(0,len(remaining))]) 
         
-        # [x,y,theta] for each part so 3* len(currentOrder)
-        nVars = len(currentOrder) * 3
+        # upper and lower bounds of variables ([x, y, theta]) based on current stock
+        nVars = len(currentOrder) * 3 # for each part 
+       
         # a list of stocks that have a larger area than the order and the order of the smallest,
         # meaning that if the order eventually fits, it will leave less unused space in the stock for the larger
         shapeIdx=(np.where(remainingsArea>currentOrderArea))[0]
         #the stocks are sorted in ascending order by area
         indexes = np.argsort(remainingsArea[shapeIdx])
         shapeIdx=shapeIdx[indexes]
-        print("Shape Indexes\n")
-        print(shapeIdx)
+       # print("Shape Indexes\n")
+       # print(shapeIdx)
        
         # this for scans the stocks shapeIdx list
         for stockIdx in shapeIdx:
-            print("Try stockIdx=%d   -> Order=%d"% (stockIdx,count))
+            #Define PEAKS
             # set currentStock for pso the stocks-remainings from the local list
             currentStock = remaining[stockIdx]
             # Set lower and upper bounds for the 3 variables for each particle
@@ -294,6 +304,7 @@ if __name__ == "__main__":
             w1= [b for b in range(0,nVars,3)]
             w2= [b for b in range(1,nVars,3)]
             w3= [b for b in range(2,nVars,3)]
+           
             LowerBounds[w1]= minx 
             LowerBounds[w2]= miny
             LowerBounds[w3]= 0
@@ -301,20 +312,24 @@ if __name__ == "__main__":
             UpperBounds = np.ones(nVars)
             UpperBounds[w1] = maxx
             UpperBounds[w2] = maxy
-            UpperBounds[w3] = 90*4 # it can also work with 2 discrete values 0,90 in range {0,90}
-            ##np.random.seed(13)
+            UpperBounds[w3] = 30*30 # it can also work with 2 discrete values 0,90 in range {0,90}
+
             
             figObj = FigureObjects(minx, maxx) # no need           
             outFun = lambda x: OutputFcn(x, figObj)
+          
             pso = DynNeighborPSO(ObjectiveFcnNew, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
-                         OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
-    
+                         OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,
+                         Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
+
             pso.optimize()
+            
+            
             # the possible locations of the order shapes
             # the implementation of the transformations results in the ordering of new positions
             pos = pso.GlobalBestPosition
             newOrder = [ shapely.affinity.rotate( 
-                    shapely.affinity.translate(currentOrder[k], xoff=pos[k*3], yoff=pos[k*3+1]), 
+                    shapely.affinity.translate(currentOrder[k], xoff=pos[k*3], yoff=pos[k*3+1]), #ring pattern
                     pos[k*3+2], origin='centroid') for k in range(len(currentOrder))]
             iterationsList.append(pso.Iteration)
            
