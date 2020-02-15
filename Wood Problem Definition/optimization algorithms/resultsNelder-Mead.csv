@@ -13,3 +13,31 @@ w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
 
 ---- Time taken: 99.77545762062073 seconds ----
 Polygons fitted=17 out of 17.
+Experiment on:15/02/2020 18:32:18
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 112.07693600654602 seconds ----
+Polygons fitted=16 out of 17.
+Experiment on:15/02/2020 18:36:42
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 57.87728023529053 seconds ----
+Polygons fitted=16 out of 17.
+Experiment on:15/02/2020 18:45:34
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 49.236408710479736 seconds ----
+Polygons fitted=15 out of 17.
+Experiment on:15/02/2020 18:48:03
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 73.36234498023987 seconds ----
+Polygons fitted=16 out of 17.

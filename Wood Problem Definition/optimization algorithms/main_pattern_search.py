@@ -9,21 +9,20 @@ Created on Wed Jan 29 14:18:31 2020
 
 from WoodProblemDefinition import Stock, Order1, Order2, Order3
 import time
+import os 
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 import shapely
 import shapely.ops
 from descartes import PolygonPatch
-
-#first pip install noisyopt
 from noisyopt import minimizeCompass
 
 
 #weights of fitness function
 w_f_OUT = 250
 w_f_OVERLAP = 500
-w_f_ATTR = 10
+w_f_ATTR = 0.1
 w_f_SMO = 2
 w_f_DIST = 2
 
@@ -173,8 +172,12 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     f = (f_OUT.area*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
    # print(f)
     return f
-# %% Main  
+# %% Main
+    
 if __name__ == "__main__":
+   
+
+
     # in case someone tries to run it from the command-line...
     plt.ion()
     #np.random.seed(1)
@@ -195,7 +198,8 @@ if __name__ == "__main__":
     remainingN= len(remaining)
     count=0
     shapesF=0
-    
+
+
     #runs as long as the order list is not empty
     while (orders):
         # a flag indicating whether the order has been fulfilled
@@ -226,6 +230,7 @@ if __name__ == "__main__":
        
         # this for scans the stocks shapeIdx list
         for stockIdx in shapeIdx:
+            print("Current Stock Index=%d   and testing order num=%d"% (stockIdx, count))
             #Define PEAKS
             # set currentStock for pso the stocks-remainings from the local list
             currentStock = remaining[stockIdx]
@@ -247,16 +252,16 @@ if __name__ == "__main__":
             UpperBounds[w3] = 30*30 
 
 
-            bounds = UpperBounds - LowerBounds
-            x0 = LowerBounds + np.random.rand(1,nVars) * bounds     
-
-           # res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=[nVars,currentStock,currentOrder])
-            args2  = [nVars,currentStock,currentOrder]
-            res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=args2,errorcontrol=False)
-           
-            pos = res.x
-
+           # Initialization with acceptable values
+            lowerBounds = LowerBounds
+            upperBounds = UpperBounds
+            bounds = UpperBounds - lowerBounds
+            x0 = lowerBounds + np.random.rand(1,nVars) * bounds #[0] isws    
+            args2  = [nVars,currentStock,currentOrder]#Nelder-Mead      L-BFGS-B         SLSQP
             
+            res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=args2,errorcontrol=False)
+            pos = res.x
+           
             # the possible locations of the order shapes
             # the implementation of the transformations results in the ordering of new positions
             newOrder = [ shapely.affinity.rotate( 
@@ -315,14 +320,12 @@ if __name__ == "__main__":
             resList.append( newOrder) #append the parts of order in resList
             resListPerStock.append(stockIdx)
             orders.remove(currentOrder)
-            print("Flag stockIdx=%d   , Current order: %d"% (stockIdx,count))
+            print("Current order: %d fitted in stock num=%d "% (count,stockIdx))
 
-    
     print("\n\n =================== RESULTS ===================\n\n")
     print("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
-   
     # The overall fitness function is obtained by combining the above criteria
-    # f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP  +f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
+#    f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP  +f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
    
     
     print('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO))
@@ -330,11 +333,11 @@ if __name__ == "__main__":
     print("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
     print("\n")
 
+    
     #Write Results on file and append on each execution
-    f= open("results_PSO.csv","a+")
+    f= open("results_pattern_search.csv","a+")
     # datetime object containing current date and time
-    now = datetime.now()
-      
+    now = datetime.now()    
     # dd/mm/YY H:M:S
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     f.write("\n")
@@ -345,12 +348,11 @@ if __name__ == "__main__":
     #f.write()
     f.write("\n =================== RESULTS ===================\n")
     f.write("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
-
-    f.write("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
-         
+    f.write("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))         
     f.close()
+
     
-    
+
     # Plot remainings
     idx=0 
     fig, ax = plt.subplots(ncols=4,nrows=2, figsize=(16,9))
@@ -366,8 +368,9 @@ if __name__ == "__main__":
         ax[idx][i%4].set_xlim(left=minx ,right=maxx)
 
     #Save figure with remainings
-    import os 
+
     name = "result_pattern_search.png"
+
     if os.path.isfile(name):
         expand = 1
         while True:
@@ -378,7 +381,6 @@ if __name__ == "__main__":
             else:
                 name = new_file_name
                 break
-            
+    print("This image will be saved with name:" +name)      
     fig.savefig(name)
-
     

@@ -237,6 +237,7 @@ if __name__ == "__main__":
        
         # this for scans the stocks shapeIdx list
         for stockIdx in shapeIdx:
+            print("Current Stock Index=%d   and testing order num=%d"% (stockIdx, count))
             #Define PEAKS
             # set currentStock for pso the stocks-remainings from the local list
             currentStock = remaining[stockIdx]
@@ -326,7 +327,7 @@ if __name__ == "__main__":
             resList.append( newOrder) #append the parts of order in resList
             resListPerStock.append(stockIdx)
             orders.remove(currentOrder)
-            print("Flag stockIdx=%d   , Current order: %d"% (stockIdx,count))
+            print("Current order: %d fitted in stock num=%d "% (count,stockIdx))
 
     print("\n\n =================== RESULTS ===================\n\n")
     print("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
