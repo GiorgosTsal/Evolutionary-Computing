@@ -6,7 +6,7 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 
 ## Use of evolutionary algorithms
 
-* [Particle Swarm Optimization, PSO with dynamic neighborhood topology)](https://en.wikipedia.org/wiki/Particle_swarm_optimization) 
+* [Particle Swarm Optimization, PSO with dynamic neighborhood topology](https://en.wikipedia.org/wiki/Particle_swarm_optimization) 
 * [Differential Evolution, DE with global and local neighborhood topologies](https://en.wikipedia.org/wiki/Differential_evolution) 
 * [Simplex algorithm](https://en.wikipedia.org/wiki/Simplex_algorithm) 
 * [Pattern search (optimization)](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) 
@@ -16,6 +16,7 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 * matplotlib
 * numpy 
 * https://github.com/Toblerity/Shapely. (The package is based on the GEOS C ++ library, which must be installed)
+* Noisyopt: A python library for optimizing noisy functions (https://github.com/andim/noisyopt)
 
 ```
 pip install Shapely
@@ -34,6 +35,9 @@ or
 ```
 conda install -c conda-forge descartes 
 ```
+
+Noisyopt is on PyPI so you can install it using:
+``` pip install noisyopt ```
 
 ## Running the tests
 
