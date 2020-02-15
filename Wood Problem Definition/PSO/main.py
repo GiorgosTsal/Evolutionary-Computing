@@ -16,14 +16,14 @@ import shapely
 import shapely.ops
 from descartes import PolygonPatch
 from DynNeighborPSO import DynNeighborPSO
-from math import pi
+
 
 #weights of fitness function
-w_f_OUT = 1000
-w_f_OVERLAP = 1000
-w_f_ATTR = 0.01
-w_f_SMO = 15
-
+w_f_OUT = 250
+w_f_OVERLAP = 500
+w_f_ATTR = 2
+w_f_SMO = 50
+w_f_DIST = 1
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
@@ -127,12 +127,20 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
     
     # the goal is to avoid overlapping the polygons cut
     # calculate the area of ​​the shapes overlapped by many shapes
-    areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))]) #the sum of the areas of the shapes of each order
+    areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))])
+
+    #the sum of the areas of the shapes of each order
     # Overlap area is the difference of the sum of the areas of the shapes of each order form
     # the UNION area of the individual shapes of the order with the placements of the proposed solution
     f_OVERLAP = areaSum-unionNewOrder.area # if there is no overlap, the difference must be zero, and
                                              #if such a difference expresses the overlapping portion
-                                             
+        
+    
+    sortedOrder = np.argsort(np.array([newOrder[i].area for i in range(0, len(newOrder))]))
+    #sortedOrder = np.argsort(() ∗ np.array([newOrder[i].area for i in range(0, len(newOrder))]))
+    sortedArray = [newOrder[w] for w in sortedOrder]
+    f_DIST = sum([sortedArray[i].distance(sortedArray[i + 1]) for i in range(0, len(sortedArray) -1)])
+                             
                                              
     # Attraction of shapes to the (0,0) axis using areas
     # Calculte the sum of the x's and the centroid of the shapes multiplied by the area of ​​the figure
@@ -152,7 +160,7 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
     
     
     # The overall fitness function is obtained by combining the above criteria
-    f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP  +f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
+    f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP + f_DIST + w_f_DIST*f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
 
     return f
 
@@ -433,6 +441,8 @@ if __name__ == "__main__":
     
     # Plot remainings
     idx=0
+    plt_label = 'w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO)
+    plt.title(plt_label)
     fig, ax = plt.subplots(ncols=4,nrows=2, figsize=(16,9))
     fig.canvas.set_window_title('Remainings- Polygons flag=%d from %d polygons'%(shapesF,shapesTotal))
     for i in range(0,len(Stock)):
