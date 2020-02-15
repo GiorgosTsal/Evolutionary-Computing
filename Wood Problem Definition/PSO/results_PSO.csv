@@ -177,3 +177,67 @@ w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=2.000000, w_f_SMO=50.00
 ---- Time taken: 417.79817748069763 seconds ----
 Polygons fitted=16 out of 17.
 Number of Iterations (avg) = (48.878788)
+Experiment on:15/02/2020 13:44:22
+w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=1.000000, w_f_SMO=15.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 361.6997263431549 seconds ----
+Polygons fitted=16 out of 17.
+Number of Iterations (avg) = (43.690909)
+Experiment on:15/02/2020 13:49:17
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 140.59913754463196 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (50.312500)
+Experiment on:15/02/2020 13:53:51
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 160.77738308906555 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (49.222222)
+Experiment on:15/02/2020 14:09:16
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 226.7713701725006 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (51.666667)
+Experiment on:15/02/2020 14:16:04
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 315.8094685077667 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (56.944444)
+Experiment on:15/02/2020 14:20:20
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 236.5458631515503 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (65.190476)
+Experiment on:15/02/2020 14:25:06
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 253.97216153144836 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (71.652174)
+Experiment on:15/02/2020 17:31:57
+w_f_OUT:250.00, w_f_OVERLAP=500.00, w_f_ATTR=0.100000, w_f_SMO=2.00
+
+ =================== RESULTS ===================
+
+---- Time taken: 370.6844506263733 seconds ----
+Polygons fitted=17 out of 17.
+Number of Iterations (avg) = (60.031250)

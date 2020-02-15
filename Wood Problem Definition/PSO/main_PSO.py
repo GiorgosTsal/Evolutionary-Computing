@@ -21,8 +21,8 @@ from DynNeighborPSO import DynNeighborPSO
 #weights of fitness function
 w_f_OUT = 250
 w_f_OVERLAP = 500
-w_f_ATTR = 2
-w_f_SMO = 50
+w_f_ATTR = 0.1
+w_f_SMO = 2
 w_f_DIST = 1
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
@@ -107,7 +107,7 @@ def plotShapelyPoly(ax, poly, **kwargs):
 
 # %% Fitness Function 
 
-def ObjectiveFcnNew(particle,nVars,Stock,Order):
+def ObjectiveFcn(particle,nVars,Stock,Order):
 
     f=0
     remaining = Stock  
@@ -121,8 +121,8 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
     
    
     # This  fitness  component is used to prevent cutting of polygons outside the boundaries of each stock
-    unionNewOrder=shapely.ops.cascaded_union(newOrder) # the union of shapes with new positions and rotations
-    f_OUT=unionNewOrder.difference(Stock) # the difference of union with stock
+    union=shapely.ops.cascaded_union(newOrder) # the union of shapes with new positions and rotations
+    f_OUT=union.difference(Stock) # the difference of union with stock
     
     
     # the goal is to avoid overlapping the polygons cut
@@ -132,25 +132,33 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
     #the sum of the areas of the shapes of each order
     # Overlap area is the difference of the sum of the areas of the shapes of each order form
     # the UNION area of the individual shapes of the order with the placements of the proposed solution
-    f_OVERLAP = areaSum-unionNewOrder.area # if there is no overlap, the difference must be zero, and
+    f_OVERLAP = areaSum-union.area # if there is no overlap, the difference must be zero, and
                                              #if such a difference expresses the overlapping portion
         
     
+    
+    
+    # Attraction of shapes to each other
+    # The aim is to reduce the distances between the shapes in descending order by area
     sortedOrder = np.argsort(np.array([newOrder[i].area for i in range(0, len(newOrder))]))
-    #sortedOrder = np.argsort(() ∗ np.array([newOrder[i].area for i in range(0, len(newOrder))]))
-    sortedArray = [newOrder[w] for w in sortedOrder]
-    f_DIST = sum([sortedArray[i].distance(sortedArray[i + 1]) for i in range(0, len(sortedArray) -1)])
+    sortedM = [newOrder[w] for w in (-sortedOrder)]
+    #This distance is the shortest and the final is the sum of all this distances
+    f_DIST = sum([sortedM[i].distance(sortedM[i + 1]) for i in range(0, len(sortedM) -1)]) 
                              
                                              
-    # Attraction of shapes to the (0,0) axis using areas
+    # Attraction of shapes to the x and y axis(0,0) using areas
     # Calculte the sum of the x's and the centroid of the shapes multiplied by the area of ​​the figure
-    f_ATTR = sum([newOrder[i].area*(newOrder[i].centroid.x+newOrder[i].centroid.y) for i in range(0,len(newOrder))])
-    
-    
+    f_ATTR_x = sum([newOrder[i].area*(newOrder[i].centroid.x) for i in range(0,len(newOrder))])
+    # Calculte the sum of the y's and the centroid of the shapes multiplied by the area of ​​the figure
+    f_ATTR_y = sum([newOrder[i].area*(newOrder[i].centroid.y) for i in range(0,len(newOrder))])
+    # term will be its summarise
+    f_ATTR = f_ATTR_x + f_ATTR_y
+
+
     # This  fitness  component  quantifies the  smoothness  of the  object  by  evaluating  the  shape  of its external  borders.  
     # Objects  with  strongly irregular  shape  are  penalized, 
     # to  avoid  the  simultaneous extraction of spatially distant regions of the same label. Initially, we compute the following ratio
-    remaining = Stock.difference(unionNewOrder)
+    remaining = Stock.difference(union)
     hull = remaining.convex_hull 
     l = hull.area/remaining.area-1 # Objects with small λare nearly convex (𝜆=0for ideally convex) which is considered as the ideal shape of an object.
     # Parameter αcontrols the slope of the function.
@@ -160,8 +168,8 @@ def ObjectiveFcnNew(particle,nVars,Stock,Order):
     
     
     # The overall fitness function is obtained by combining the above criteria
-    f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP + f_DIST + w_f_DIST*f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
-
+    f = (f_OUT.area*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
+   # print(f)
     return f
 
 # %% Class for storing and updating the figure's objects
@@ -329,13 +337,13 @@ if __name__ == "__main__":
             UpperBounds = np.ones(nVars)
             UpperBounds[w1] = maxx
             UpperBounds[w2] = maxy
-            UpperBounds[w3] = 30*30 # it can also work with 2 discrete values 0,90 in range {0,90}
+            UpperBounds[w3] = 30*30 
 
             
-            figObj = FigureObjects(minx, maxx) # no need           
+            figObj = FigureObjects(minx, maxx)            
             outFun = lambda x: OutputFcn(x, figObj)
           
-            pso = DynNeighborPSO(ObjectiveFcnNew, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
+            pso = DynNeighborPSO(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,
                          Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
 
@@ -352,19 +360,19 @@ if __name__ == "__main__":
            
             
             # first check if the order is in stock.
-            unionNewOrder=shapely.ops.cascaded_union(newOrder)
+            union=shapely.ops.cascaded_union(newOrder)
             # take newOrder out of stock - inverse of remaining
-            difUnionNewOrder=unionNewOrder.difference(currentStock) 
+            difunion=union.difference(currentStock) 
             # if this area is larger than the tolerance 
             # then the current solution is not acceptable and the resume continues for the same order as the next stock in the list  
-            if difUnionNewOrder.area >tolerance:
+            if difunion.area >tolerance:
                 continue
             
             # secondly check if there is an overlap and skip
             # overlap area is equal with sumOfArea - areaOfUnion
             areaSum = sum([newOrder[w].area for w in range(0,len(newOrder))])
             #the difference of the area (sum of areas) of the shapes of the order minus the area of ​​the union of the shapes of the order
-            difArea = areaSum-unionNewOrder.area
+            difArea = areaSum-union.area
             # if this area is larger than the tolerance 
             #then the current solution is not acceptable and the resume continues for the same order as the next stock in the list    
             if difArea > tolerance:
@@ -441,9 +449,10 @@ if __name__ == "__main__":
     
     # Plot remainings
     idx=0
-    plt_label = 'w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO)
-    plt.title(plt_label)
+   # plt_label = 'w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO)
+ 
     fig, ax = plt.subplots(ncols=4,nrows=2, figsize=(16,9))
+  #  plt.title(plt_label)
     fig.canvas.set_window_title('Remainings- Polygons flag=%d from %d polygons'%(shapesF,shapesTotal))
     for i in range(0,len(Stock)):
         if i>=4:
