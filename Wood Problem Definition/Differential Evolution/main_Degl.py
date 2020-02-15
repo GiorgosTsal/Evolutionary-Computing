@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 29 14:18:31 2020
+Runs DynNeighbordegl for MATLAB's peaks 2D function.
 
-@author: gtsal
 """
+
 # %% Libraries
 
 from WoodProblemDefinition import Stock, Order1, Order2, Order3
@@ -15,16 +14,16 @@ from datetime import datetime
 import shapely
 import shapely.ops
 from descartes import PolygonPatch
-from DynNeighborPSO import DynNeighborPSO
+# This import registers the 3D projection, but is otherwise unused.
+import matplotlib.pyplot as plt
+from Global_Local_NeighorDE import Degl
 
-
-#weights of fitness function
+# define weights of fitness function
 w_f_OUT = 250
 w_f_OVERLAP = 500
 w_f_ATTR = 0.1
 w_f_SMO = 2
 w_f_DIST = 1
-
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors
@@ -179,7 +178,7 @@ class FigureObjects:
         The initializer creates the figure given only the lower and upper bounds (scalars, since the bounds are 
         typically equal in both dimensions).
         
-        The update member function accepts a DynNeighborPSO object and updates all elements in the figure.
+        The update member function accepts a DynNeighbordegl object and updates all elements in the figure.
         
         The figure has a top row of 1 subplots. This shows the best-so-far global finess value .
         The bottom row shows the global best-so-far solution achieved by the algorithm and the remaining current stock after placement.
@@ -212,27 +211,27 @@ class FigureObjects:
         self.fig.tight_layout()
 
     
-    def update(self, pso):
-        """ Updates the figure in each iteration provided a PSODynNeighborPSO object. """
-        # pso.Iteration is the PSO initialization; setup the best-so-far fitness line xdata and ydata, now that 
+    def update(self, degl):
+        """ Updates the figure in each iteration provided a deglDynNeighbordegl object. """
+        # degl.Iteration is the degl initialization; setup the best-so-far fitness line xdata and ydata, now that 
         # we know MaxIterations
         
-        if pso.Iteration == -1:
-            xdata = np.arange(pso.MaxIterations+1)-1
+        if degl.Iteration == -1:
+            xdata = np.arange(degl.MaxIterations+1)-1
             self.lineBestFit.set_xdata(xdata)
-            self.lineBestFit.set_ydata(pso.GlobalBestSoFarFitnesses)
+            self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
        
         # update the global best fitness line (remember, -1 is for initialization == iteration 0)
-        self.lineBestFit.set_ydata(pso.GlobalBestSoFarFitnesses)
+        self.lineBestFit.set_ydata(degl.GlobalBestSoFarFitnesses)
         self.ax[0].relim()
         self.ax[0].autoscale_view()
-        self.ax[0].title.set_text('Best-so-far global best fitness: {:g}'.format(pso.GlobalBestFitness))
+        self.ax[0].title.set_text('Best-so-far global best fitness: {:g}'.format(degl.GlobalBestFitness))
         
         # because of title and particles positions changing, we cannot update specific artists only (the figure
         # background needs updating); redrawing the whole figure canvas is expensive but we have to
 
-        newOrder= pso.newOrder
-        remaining = pso.remaining
+        newOrder= degl.newOrder
+        remaining = degl.remaining
         # NOTE: the above operation is perhaps faster if we perform a cascade union first as below, check it on your code:
         #remaining = Stock[6].difference(shapely.ops.cascaded_union(newOrder))
         #self.fig2, ax = plt.subplots(ncols=2)
@@ -241,7 +240,7 @@ class FigureObjects:
         self.ax[2].cla()
         self.ax[1].set_title('Rotated & translated order')
         self.ax[2].set_title('Remaining after set difference')
-        pp = plotShapelyPoly(self.ax[1], [pso.Stock]+newOrder)
+        pp = plotShapelyPoly(self.ax[1], [degl.Stock]+newOrder)
         pp[0].set_facecolor([1,1,1,1])
         plotShapelyPoly(self.ax[2], remaining)
         self.ax[1].relim()
@@ -252,22 +251,22 @@ class FigureObjects:
         self.fig.canvas.flush_events()
        
 
-def OutputFcn(pso, figObj):
+def OutputFcn(degl, figObj):
     """ Our output function: updates the figure object and prints best fitness on terminal.
         
         Always returns False (== don't stop the iterative process)
     """
-    if pso.Iteration == -1:
+    if degl.Iteration == -1:
         print('Iter.    Global best')
-    print('{0:5d}    {1:.5f}'.format(pso.Iteration, pso.GlobalBestFitness))
+    print('{0:5d}    {1:.5f}'.format(degl.Iteration, degl.GlobalBestFitness))
     
-    figObj.update(pso)
+    figObj.update(degl)
     
     return False
-    
 # %% Main
-    
 if __name__ == "__main__":
+    """ Executed only when the file is run as a script. """
+    
     # in case someone tries to run it from the command-line...
     plt.ion()
     #np.random.seed(1)
@@ -321,7 +320,7 @@ if __name__ == "__main__":
         for stockIdx in shapeIdx:
             print("Current Stock Index=%d   and testing order num=%d"% (stockIdx, count))
             #Define PEAKS
-            # set currentStock for pso the stocks-remainings from the local list
+            # set currentStock for degl the stocks-remainings from the local list
             currentStock = remaining[stockIdx]
             # Set lower and upper bounds for the 3 variables for each particle
             # as the bounds of stocks
@@ -344,20 +343,20 @@ if __name__ == "__main__":
             figObj = FigureObjects(minx, maxx)            
             outFun = lambda x: OutputFcn(x, figObj)
           
-            pso = DynNeighborPSO(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
+            degl = Degl(ObjectiveFcn, nVars, LowerBounds=LowerBounds, UpperBounds=UpperBounds, 
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,
                          Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
 
-            pso.optimize()
+            degl.optimize()
             
             
             # the possible locations of the order shapes
             # the implementation of the transformations results in the ordering of new positions
-            pos = pso.GlobalBestPosition
+            pos = degl.GlobalBestPosition
             newOrder = [ shapely.affinity.rotate( 
                     shapely.affinity.translate(currentOrder[k], xoff=pos[k*3], yoff=pos[k*3+1]), #ring pattern
                     pos[k*3+2], origin='centroid') for k in range(len(currentOrder))]
-            iterationsList.append(pso.Iteration)
+            iterationsList.append(degl.Iteration)
            
             
             # first check if the order is in stock.
@@ -427,7 +426,7 @@ if __name__ == "__main__":
     print("\n")
 
     #Write Results on file and append on each execution
-    f= open("results_PSO.csv","a+")
+    f= open("results_degl.csv","a+")
     # datetime object containing current date and time
     now = datetime.now()
       
@@ -467,7 +466,7 @@ if __name__ == "__main__":
 
     #Save figure with remainings
     import os 
-    name = "result_PSO.png"
+    name = "result_degl.png"
     if os.path.isfile(name):
         expand = 1
         while True:
@@ -480,5 +479,3 @@ if __name__ == "__main__":
                 break
             
     fig.savefig(name)
-
-    

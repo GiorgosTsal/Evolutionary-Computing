@@ -9,6 +9,7 @@ Global Optimization Toolbox.
 import numpy as np
 import warnings
 import math
+import shapely
 
 try:
     from joblib import Parallel, delayed
@@ -17,6 +18,13 @@ try:
 except ImportError:
     HaveJoblib = False
 
+def get_Data(degl):
+        obj = degl.GlobalBestPosition  
+        newOrder = [ shapely.affinity.rotate(shapely.affinity.translate(degl.Order[j], xoff=obj[j*3], yoff=obj[j*3+1]),obj[j*3+2], origin='centroid') for j in range(len(degl.Order))]  
+        unionNewOrder=shapely.ops.cascaded_union(newOrder)
+        remaining = (degl.Stock).difference(unionNewOrder)
+        
+        return [newOrder,remaining]
 
 
 class Degl:
@@ -35,7 +43,7 @@ class Degl:
                 process.
             o Swarm: the current iteration swarm (nParticles x nVars)
             o Velocity: the current velocity vectors (nParticles x nVars)
-            o CurennetFitness: the current swarm's fitnesses for all particles (nParticles x 1)
+            o CurrentGenFitness: the current swarm's fitnesses for all particles (nParticles x 1)
             o PreviousBestPosition: the best-so-far positions found for each individual (nParticles x nVars)
             o PreviousBestFitness: the fitnesses of the best-so-far individuals (nParticles x 1)
             o GlobalBestFitness: the overall best fitness attained found from the beginning of the iterative process
@@ -72,6 +80,11 @@ class Degl:
                 , MaxStallIterations = 20
                 , OutputFcn = None
                 , UseParallel = False
+                , Stock = None
+                , Order = None
+                , remaining = None
+                , newOrder = None
+                , u=None
                 ):
         """ The object is initialized with two mandatory positional arguments:
                 o ObjectiveFcn: function object that accepts a vector (the particle) and returns the scalar fitness 
@@ -115,7 +128,10 @@ class Degl:
         self.b = b
         self.w_min = w_min
         self.w_max = w_max
-        
+        self.Order=Order
+        self.Stock = Stock
+        self.remaining = remaining
+        self.newOrder = newOrder
         
         
         
@@ -192,29 +208,19 @@ class Degl:
         self.Velocity = -bRangeMatrix + 2.0 * np.random.rand(self.D,nVars) * bRangeMatrix
         
         # Initial fitness
-        self.CurennetFitness = np.zeros(self.D)
+        self.CurrentGenFitness = np.zeros(self.D)
         self.__evaluateDE()
         
         # Initial best-so-far individuals and global best
         self.PreviousBestPosition = self.z.copy()
-        self.PreviousBestFitness = self.CurennetFitness.copy()
+        self.PreviousBestFitness = self.CurrentGenFitness.copy()
         
-        bInd = self.CurennetFitness.argmin()
-        self.GlobalBestFitness = self.CurennetFitness[bInd].copy()
+        bInd = self.CurrentGenFitness.argmin()
+        self.GlobalBestFitness = self.CurrentGenFitness[bInd].copy()
         self.GlobalBestPosition = self.PreviousBestPosition[bInd, :].copy()
         
         # iteration counter starts at -1, meaning initial population
         self.Iteration = -1;
-        
-#        # Initial neighborhood & inertia
-#        self.MinNeighborhoodSize = max(2, int(np.floor(nParticles * self.MinNeighborsFraction)));
-#        self.AdaptiveNeighborhoodSize = self.MinNeighborhoodSize;
-#        
-#        if np.all(self.InertiaRange >= 0):
-#            self.AdaptiveInertia = self.InertiaRange[1]
-#        else:
-#            self.AdaptiveInertia = self.InertiaRange[0]
-        
         self.StallCounter = 0;
         
         # Keep the global best of each iteration as an array initialized with NaNs. First element is for initial swarm,
@@ -236,10 +242,10 @@ class Degl:
         n = self.D
         if self.UseParallel:
             nCores = multiprocessing.cpu_count()
-            self.CurennetFitness[:] = Parallel(n_jobs=nCores)( 
+            self.CurrentGenFitness[:] = Parallel(n_jobs=nCores)( 
                     delayed(self.ObjectiveFcn)(self.z[i,:]) for i in range(n) )
         else:
-            self.CurennetFitness[:] = [self.ObjectiveFcn(self.z[i,:]) for i in range(n)]
+            self.CurrentGenFitness[:] = [self.ObjectiveFcn(self.z[i,:],self.nVars,self.Stock,self.Order) for i in range(self.D)]
     
     
     def mutation(self):
@@ -252,9 +258,6 @@ class Degl:
         
         #return self.V
     
-    def wtf(self):
-        print('wtf')
-
     
     def optimize( self ):
         
@@ -277,76 +280,34 @@ class Degl:
              #-------------------start of loop through ensemble------------------------
             for i in range(0, self.D):
                 
-                #Mutate using eq. (3)–(5)!new vectoryi
-              
-                # result_array = np.array([l for l in range((i-k),(i+k))])  
+                self.mutation()      
+                self.u[i,1] = [1,2]
                 
-                # result_array[result_array<0] = result_array[result_array<0] + self.D
-                
-                # result_array[result_array>(self.D-1)]=result_array[result_array>(self.D-1)] -self.D 
-                
-                # print(result_array)
-                
-                self.mutation()
-                
-                
-                
-                # # find neighbors
-                # neighbors = np.random.choice( self.D-1, size=self.AdaptiveNeighborhoodSize, replace=False)
-                # neighbors[neighbors >= i] += 1; # do not select itself, i.e., index i
-                
-                # bInd = self.PreviousBestFitness[neighbors].argmin()
-                # bestNeighbor = neighbors[bInd]
-                
-                
-                # # update velocity
-                # randSelf = np.random.rand(nVars)
-                # randSocial = np.random.rand(nVars)
-                # self.Velocity[i,:] = self.AdaptiveInertia * self.Velocity[i,:] \
-                #     + selfWeight * randSelf * (self.PreviousBestPosition[i,:] - self.Swarm[i,:]) \
-                #     + socialWeight * randSocial * (self.PreviousBestPosition[bestNeighbor,:] - self.Swarm[i,:])
-                
-                # # update position
-                # self.Swarm[i,:] += self.Velocity[p,:]
-                
-            #     # check bounds violation
-            #     posInvalid = self.Swarm[i,:] < self.LowerBounds
-            #     self.Swarm[i,posInvalid] = self.LowerBounds[posInvalid]
-            #     self.Velocity[i,posInvalid] = 0.0
-                
-            #     posInvalid = self.Swarm[i,:] > self.UpperBounds
-            #     self.Swarm[i,posInvalid] = self.UpperBounds[posInvalid]
-            #     self.Velocity[i,posInvalid] = 0.0
+        
             
             
-            # # calculate new fitness & update best
-            # self.__evaluateDE()
-            # particlesProgressed = self.CurennetFitness < self.PreviousBestFitness
-            # self.PreviousBestPosition[particlesProgressed, :] = self.Swarm[particlesProgressed, :]
-            # self.PreviousBestFitness[particlesProgressed] = self.CurennetFitness[particlesProgressed]
+            #calculate fitness
+            self.__evaluateDE()
+            # find chromosomes tha has been improved and replace the old values with the new
+            genProgressed = self.CurrentGenFitness < self.PreviousBestFitness
+            self.PreviousBestPosition[genProgressed, :] = self.u[genProgressed, :]
+            self.z[genProgressed, :] = self.u[genProgressed, :]
+            self.PreviousBestFitness[genProgressed] = self.CurrentGenFitness[genProgressed]
             
-            # #calculate fitness
-            # self.__evaluateGen()
-            # # find chromosomes tha has been improved and replace the old values with the new
-            # genProgressed = self.CurrentGenFitness < self.PreviousBestFitness
-            # self.PreviousBestPosition[genProgressed, :] = self.u[genProgressed, :]
-            # self.z[genProgressed, :] = self.u[genProgressed, :]
-            # self.PreviousBestFitness[genProgressed] = self.CurrentGenFitness[genProgressed]
+            # update global best, adaptive neighborhood size and stall counter
+            newBestInd = self.CurrentGenFitness.argmin()
+            newBestFit = self.CurrentGenFitness[newBestInd]
             
-            # # update global best, adaptive neighborhood size and stall counter
-            # newBestInd = self.CurrentGenFitness.argmin()
-            # newBestFit = self.CurrentGenFitness[newBestInd]
-            
-            # if newBestFit < self.GlobalBestFitness:
-            #     self.GlobalBestFitness = newBestFit
-            #     self.GlobalBestPosition = self.z[newBestInd, :].copy()
-                
-            #     self.StallCounter = max(0, self.StallCounter-1)
-            #     # calculate remaining only once when fitness is improved to save some time
-            #     # useful for the plots created
-            #     [self.newOrder,self.remaining] = extract_obj(self)
-            # else:
-            #     self.StallCounter += 1
+            if newBestFit < self.GlobalBestFitness:
+                self.GlobalBestFitness = newBestFit
+                self.GlobalBestPosition = self.z[newBestInd, :].copy()
+               
+                self.StallCounter = max(0, self.StallCounter-1)
+                # calculate remaining only once when fitness is improved to save some time
+                # useful for the plots created
+                [self.newOrder,self.remaining] = get_Data(self)
+            else:
+                self.StallCounter += 1
                 
             # first element of self.GlobalBestSoFarFitnesses is for self.Iteration == -1
             self.GlobalBestSoFarFitnesses[self.Iteration+1] = self.GlobalBestFitness
@@ -383,7 +344,6 @@ class Degl:
         
         # print stop message
         print('Algorithm stopped after {} iterations. Best fitness attained: {}'.format(
-                self.Iteration+1,self.GlobalBestFitness))
+            self.Iteration+1,self.GlobalBestFitness))
         print(f'Stop reason: {self.StopReason}')
         
-            
