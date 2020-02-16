@@ -10,6 +10,7 @@ import numpy as np
 import warnings
 import math
 import shapely
+from random import randint
 
 try:
     from joblib import Parallel, delayed
@@ -262,7 +263,11 @@ class Degl:
     def optimize( self ):
         """ Runs the iterative process on the initialized swarm. """
         nVars = self.nVars
+        L =np.zeros([self.D,nVars])
+        g =np.zeros([self.D,nVars])
+        y =np.zeros([self.D,nVars])
         AdaptiveNeighborhoodSize = 3 # range [i − k, i + k]
+
         #find radius
         k = round(self.D * self.Nf) # Neighborhood size
         print("To k einai: %f" %k)
@@ -317,9 +322,9 @@ class Degl:
                 y[i,] = w * g[i,] + (1 - w) * L[i,]
  
                 # Crossover using eq. (7) → new vector ui
-#                if()
-#                    u[i,k] = y[i,k]
-            
+                Cr = 0.8
+                self.u[i,k] = self.y[i,k] if np.random(0,1) < Cr or k==randint(0,self.D) else self.z[i,k]
+
             
             #calculate fitness
             self.__evaluateDE()
