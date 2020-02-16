@@ -10,7 +10,7 @@ import numpy as np
 import warnings
 import math
 import shapely
-from random import randint
+from random import randint, random
 
 try:
     from joblib import Parallel, delayed
@@ -200,13 +200,8 @@ class Degl:
         bRangeMatrix = ubMatrix - lbMatrix
         self.z = lbMatrix + np.random.rand(self.D,nVars) * bRangeMatrix
         
-        #find radius
-        k = math.floor(self.D * self.Nf) # Neighborhood size
+   
         
-        
-        
-        # Initial velocity: random in [-(UpperBound-LowerBound), (UpperBound-LowerBound)]
-        self.Velocity = -bRangeMatrix + 2.0 * np.random.rand(self.D,nVars) * bRangeMatrix
         
         # Initial fitness
         self.CurrentGenFitness = np.zeros(self.D)
@@ -247,25 +242,17 @@ class Degl:
                     delayed(self.ObjectiveFcn)(self.z[i,:]) for i in range(n) )
         else:
             self.CurrentGenFitness[:] = [self.ObjectiveFcn(self.z[i,:],self.nVars,self.Stock,self.Order) for i in range(self.D)]
-    
-    
-    def mutation(self):
-        stop = 0
-        print('mutation')
-        stop = stop + 1
-        print(stop)      
-        if(stop>30):
-            return False
-        
-        #return self.V
-    
+
     
     def optimize( self ):
         """ Runs the iterative process on the initialized swarm. """
         nVars = self.nVars
+        #find radius
+        k = math.floor(self.D * self.Nf) # Neighborhood size
         L =np.zeros([self.D,nVars])
         g =np.zeros([self.D,nVars])
         y =np.zeros([self.D,nVars])
+        self.u = np.zeros([self.D, nVars])
         AdaptiveNeighborhoodSize = 3 # range [i − k, i + k]
 
         #find radius
@@ -286,20 +273,22 @@ class Degl:
                                 
                 # find neighbors
                 neighbors = np.array([w for w in range((i-k),(i+k+1))])
-                neighbors[neighbors < 0] +=  neighbors[neighbors < 0] - self.D; 
+                neighbors[neighbors < 0] +=  neighbors[neighbors < 0] + self.D; 
                 neighbors[neighbors > self.D-1] =neighbors[neighbors > self.D-1] - self.D
-            
+                
+                print(neighbors)
                 neighbors_idx = np.random.choice( neighbors, size=AdaptiveNeighborhoodSize, replace=False)
                 neighbors_idx[neighbors_idx == i] = neighbors_idx[2]; # do not select itself, i.e., index i
                 p=neighbors_idx[0]
                 q=neighbors_idx[1]
                 
+
                 bInd = self.PreviousBestFitness[neighbors].argmin()
                 bestNeighbor = neighbors[bInd]
                 z_best = self.z[bestNeighbor]
                 
                 #   Mutate using eq. (3)–(5) → new vector yi
-                
+                ##edo skaei na to do
                 #   Li = zi + α · (zbesti − zi) + β · (zp − zq), (3)
                 L[i,] = self.z[i,] + self.a (z_best - self.z[i,]) + self.b * (self.z[p,] - self.z[q,])
                 
@@ -324,7 +313,15 @@ class Degl:
                 # Crossover using eq. (7) → new vector ui
                 Cr = 0.8
                 self.u[i,k] = self.y[i,k] if np.random(0,1) < Cr or k==randint(0,self.D) else self.z[i,k]
-
+                
+                #Ensure (saturate) => u(i,j) ∈ [z(min,j) , z(max,j)]
+                # check bounds violation
+                posInvalid = self.u[i,:] < self.LowerBounds
+                self.u[i,posInvalid] = self.LowerBounds[posInvalid]
+                
+                posInvalid = self.u[i,:] > self.UpperBounds
+                self.u[i,posInvalid] = self.UpperBounds[posInvalid]
+                
             
             #calculate fitness
             self.__evaluateDE()

@@ -294,7 +294,7 @@ if __name__ == "__main__":
         # a flag indicating whether the order has been fulfilled
         flag = False
         count=count+1
-        tolerance = 1e-4
+        tolerance = 1e-3
         
         # place the 1st order as current and starting calculations
         currentOrder = orders[0]
