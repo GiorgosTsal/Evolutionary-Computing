@@ -164,7 +164,8 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     a = 1.11
     # To obtain normalized fitness values in the range [0,1], the smoothness fitness is defined as follows
     f_SMO = 1/(1+a*l)
-    
+    #The criterion is maximized (fsm = 1) when the polygon is convex and the lower the values the more concave it is
+    f_SMO = 1-f_SMO
     
     # The overall fitness function is obtained by combining the above criteria
     f = (f_OUT.area*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
@@ -353,6 +354,7 @@ if __name__ == "__main__":
             # the possible locations of the order shapes
             # the implementation of the transformations results in the ordering of new positions
             pos = degl.GlobalBestPosition
+            #try rotate,translate etc
             newOrder = [ shapely.affinity.rotate( 
                     shapely.affinity.translate(currentOrder[k], xoff=pos[k*3], yoff=pos[k*3+1]), #ring pattern
                     pos[k*3+2], origin='centroid') for k in range(len(currentOrder))]

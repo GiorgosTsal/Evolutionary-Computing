@@ -260,11 +260,9 @@ class Degl:
     
     
     def optimize( self ):
-        
-        print("test")
         """ Runs the iterative process on the initialized swarm. """
         nVars = self.nVars
-        
+        AdaptiveNeighborhoodSize = 3 # range [i − k, i + k]
         #find radius
         k = round(self.D * self.Nf) # Neighborhood size
         print("To k einai: %f" %k)
@@ -278,12 +276,49 @@ class Degl:
             w = self.w_min+(self.w_max-self.w_min)*(self.Iteration-1)/(self.MaxIterations-1) 
           
              #-------------------start of loop through ensemble------------------------
-            for i in range(0, self.D):
+            #for i = 1 to D
+            for i in range(0, self.D): 
+                                
+                # find neighbors
+                neighbors = np.array([w for w in range((i-k),(i+k+1))])
+                neighbors[neighbors < 0] +=  neighbors[neighbors < 0] - self.D; 
+                neighbors[neighbors > self.D-1] =neighbors[neighbors > self.D-1] - self.D
+            
+                neighbors_idx = np.random.choice( neighbors, size=AdaptiveNeighborhoodSize, replace=False)
+                neighbors_idx[neighbors_idx == i] = neighbors_idx[2]; # do not select itself, i.e., index i
+                p=neighbors_idx[0]
+                q=neighbors_idx[1]
                 
-                self.mutation()      
-                self.u[i,1] = [1,2]
+                bInd = self.PreviousBestFitness[neighbors].argmin()
+                bestNeighbor = neighbors[bInd]
+                z_best = self.z[bestNeighbor]
                 
-        
+                #   Mutate using eq. (3)–(5) → new vector yi
+                
+                #   Li = zi + α · (zbesti − zi) + β · (zp − zq), (3)
+                L[i,] = self.z[i,] + self.a (z_best - self.z[i,]) + self.b * (self.z[p,] - self.z[q,])
+                
+                # mutated solution by the whole population
+                idx = np.random.choice(self.D, AdaptiveNeighborhoodSize, replace = False)
+                idx[idx==i] = idx[2]  # do not select itself, i.e., index i
+                
+                # r1 and r2 random indices in space [1, D] so that r1 ̸ = r2 ̸ = i and zbest the best
+                # chromosome of the whole population of the previous generation
+                r1 = idx[0]
+                r2 = idx[1]
+                
+                bInd = self.PreviousBestFitness[idx].argmin()
+                z_best = self.z[bInd]
+                
+                # gi = zi + α · (zbest − zi) + β · (zr1 − zr2), (4)
+                g[i,] = self.z[i,] + self.a * (z_best - self.z[i,]) + self.b (self.z[r1,] - self.z[r2,])
+                
+                #   yi = w · gi + (1 − w) · Li, (5)
+                y[i,] = w * g[i,] + (1 - w) * L[i,]
+ 
+                # Crossover using eq. (7) → new vector ui
+#                if()
+#                    u[i,k] = y[i,k]
             
             
             #calculate fitness
