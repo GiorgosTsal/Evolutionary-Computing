@@ -251,15 +251,16 @@ if __name__ == "__main__":
             UpperBounds[w2] = maxy
             UpperBounds[w3] = 30*30 
 
-
-           # Initialization with acceptable values
-            lowerBounds = LowerBounds
-            upperBounds = UpperBounds
-            bounds = UpperBounds - lowerBounds
-            x0 = lowerBounds + np.random.rand(1,nVars) * bounds #[0] isws    
-            args2  = [nVars,currentStock,currentOrder]#Nelder-Mead      L-BFGS-B         SLSQP
             
-            res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=args2,errorcontrol=False)
+
+  
+    	    # Initial swarm: randomly in [lower,upper] and if any is +-Inf in [-1000, 1000]
+            lbMatrix = LowerBounds
+            ubMatrix = UpperBounds
+            bRangeMatrix = ubMatrix - lbMatrix
+            x0= lbMatrix + np.random.rand(1,nVars) * bRangeMatrix
+
+            res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=[nVars,currentStock,currentOrder],errorcontrol=False)
             pos = res.x
            
             # the possible locations of the order shapes
