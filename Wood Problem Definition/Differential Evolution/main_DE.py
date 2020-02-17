@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Runs DynNeighbordegl for MATLAB's peaks 2D function.
+Runs Global and Local neighbors Differential Evolution.
 
 """
 
@@ -15,15 +15,14 @@ import shapely
 import shapely.ops
 from descartes import PolygonPatch
 # This import registers the 3D projection, but is otherwise unused.
-import matplotlib.pyplot as plt
 from Global_Local_NeighorDE import Degl
 
 # define weights of fitness function
-w_f_OUT = 250
-w_f_OVERLAP = 500
-w_f_ATTR = 0.1
-w_f_SMO = 2
-w_f_DIST = 1
+w_f_OUT = 500
+w_f_OVERLAP = 600
+w_f_ATTR = 20
+w_f_SMO = 10
+w_f_DIST = 10
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors

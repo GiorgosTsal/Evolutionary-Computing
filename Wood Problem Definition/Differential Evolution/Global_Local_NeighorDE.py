@@ -270,7 +270,7 @@ class Degl:
 
         #find radius
         k = round(self.D * self.Nf) # Neighborhood size
-        print("To k einai: %f" %k)
+ 
         # start the iteration
         doStop = False
         
@@ -289,7 +289,7 @@ class Degl:
                 neighbors[neighbors < 0] +=  neighbors[neighbors < 0] + self.D; 
                 neighbors[neighbors > self.D-1] =neighbors[neighbors > self.D-1] - self.D
                 
-                print(neighbors)
+                #print(neighbors)
                 neighbors_idx = np.random.choice( neighbors, size=AdaptiveNeighborhoodSize, replace=False)
                 neighbors_idx[neighbors_idx == i] = neighbors_idx[2]; # do not select itself, i.e., index i
                 p=neighbors_idx[0]
