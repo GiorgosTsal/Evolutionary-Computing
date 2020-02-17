@@ -10,7 +10,8 @@ import numpy as np
 import warnings
 import math
 import shapely
-from random import randint, random
+from random import randint
+import random
 
 try:
     from joblib import Parallel, delayed
@@ -205,7 +206,7 @@ class Degl:
         
         # Initial fitness
         self.CurrentGenFitness = np.zeros(self.D)
-        self.__evaluateDE()
+        self.__evaluateDEz()
         
         # Initial best-so-far individuals and global best
         self.PreviousBestPosition = self.z.copy()
@@ -231,7 +232,7 @@ class Degl:
             self.OutputFcn(self)
     
     
-    def __evaluateDE(self):
+    def __evaluateDEz(self):
         """ Helper private member function that evaluates the population, by calling ObjectiveFcn either in serial or
             parallel mode, depending on the UseParallel option during initialization.
         """
@@ -242,6 +243,18 @@ class Degl:
                     delayed(self.ObjectiveFcn)(self.z[i,:]) for i in range(n) )
         else:
             self.CurrentGenFitness[:] = [self.ObjectiveFcn(self.z[i,:],self.nVars,self.Stock,self.Order) for i in range(self.D)]
+            
+    def __evaluateDEu(self):
+        """ Helper private member function that evaluates the population, by calling ObjectiveFcn either in serial or
+            parallel mode, depending on the UseParallel option during initialization.
+        """
+        n = self.D
+        if self.UseParallel:
+            nCores = multiprocessing.cpu_count()
+            self.CurrentGenFitness[:] = Parallel(n_jobs=nCores)( 
+                    delayed(self.ObjectiveFcn)(self.u[i,:]) for i in range(n) )
+        else:
+            self.CurrentGenFitness[:] = [self.ObjectiveFcn(self.u[i,:],self.nVars,self.Stock,self.Order) for i in range(self.D)]
 
     
     def optimize( self ):
@@ -288,9 +301,8 @@ class Degl:
                 z_best = self.z[bestNeighbor]
                 
                 #   Mutate using eq. (3)–(5) → new vector yi
-                ##edo skaei na to do
                 #   Li = zi + α · (zbesti − zi) + β · (zp − zq), (3)
-                L[i,] = self.z[i,] + self.a (z_best - self.z[i,]) + self.b * (self.z[p,] - self.z[q,])
+                L[i,] = self.z[i,] + self.a * (z_best - self.z[i,]) + self.b * (self.z[p,] - self.z[q,])
                 
                 # mutated solution by the whole population
                 idx = np.random.choice(self.D, AdaptiveNeighborhoodSize, replace = False)
@@ -305,14 +317,16 @@ class Degl:
                 z_best = self.z[bInd]
                 
                 # gi = zi + α · (zbest − zi) + β · (zr1 − zr2), (4)
-                g[i,] = self.z[i,] + self.a * (z_best - self.z[i,]) + self.b (self.z[r1,] - self.z[r2,])
+                g[i,] = self.z[i,] + self.a * (z_best - self.z[i,]) + self.b * (self.z[r1,] - self.z[r2,])
                 
                 #   yi = w · gi + (1 − w) · Li, (5)
                 y[i,] = w * g[i,] + (1 - w) * L[i,]
  
                 # Crossover using eq. (7) → new vector ui
-                Cr = 0.8
-                self.u[i,k] = self.y[i,k] if np.random(0,1) < Cr or k==randint(0,self.D) else self.z[i,k]
+                Cr = 0.8                
+                j_rand = randint(0,self.D)
+                for c in range(0,self.nVars):
+                    self.u[i,c] = y[i,c] if (random.randrange(0,1) < Cr or k==j_rand) else self.z[i,c]    
                 
                 #Ensure (saturate) => u(i,j) ∈ [z(min,j) , z(max,j)]
                 # check bounds violation
@@ -324,7 +338,7 @@ class Degl:
                 
             
             #calculate fitness
-            self.__evaluateDE()
+            self.__evaluateDEu()
             # find chromosomes tha has been improved and replace the old values with the new
             genProgressed = self.CurrentGenFitness < self.PreviousBestFitness
             self.PreviousBestPosition[genProgressed, :] = self.u[genProgressed, :]

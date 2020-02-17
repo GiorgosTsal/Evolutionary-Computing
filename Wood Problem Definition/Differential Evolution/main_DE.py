@@ -314,9 +314,7 @@ if __name__ == "__main__":
         #the stocks are sorted in ascending order by area
         indexes = np.argsort(remainingsArea[shapeIdx])
         shapeIdx=shapeIdx[indexes]
-       # print("Shape Indexes\n")
-       # print(shapeIdx)
-       
+  
         # this for scans the stocks shapeIdx list
         for stockIdx in shapeIdx:
             print("Current Stock Index=%d   and testing order num=%d"% (stockIdx, count))
