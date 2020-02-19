@@ -18,11 +18,11 @@ from descartes import PolygonPatch
 from Global_Local_NeighorDE import Degl
 
 # define weights of fitness function
-w_f_OUT = 500
-w_f_OVERLAP = 600
-w_f_ATTR = 20
-w_f_SMO = 10
-w_f_DIST = 10
+w_f_OUT = 650
+w_f_OVERLAP = 500
+w_f_ATTR = 1
+w_f_SMO = 300
+w_f_DIST = 3
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors
@@ -121,7 +121,7 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     # This  fitness  component is used to prevent cutting of polygons outside the boundaries of each stock
     union=shapely.ops.cascaded_union(newOrder) # the union of shapes with new positions and rotations
     f_OUT=union.difference(Stock) # the difference of union with stock
-    
+    f_OUT = f_OUT.area
     
     # the goal is to avoid overlapping the polygons cut
     # calculate the area of ​​the shapes overlapped by many shapes
@@ -164,11 +164,18 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     # To obtain normalized fitness values in the range [0,1], the smoothness fitness is defined as follows
     f_SMO = 1/(1+a*l)
     #The criterion is maximized (fsm = 1) when the polygon is convex and the lower the values the more concave it is
-    f_SMO = 1-f_SMO
+    #f_SMO = 1-f_SMO
+    
+    print("f_OUT:",f_OUT*w_f_OUT)
+    print("f_OVERLAP:",f_OVERLAP*w_f_OVERLAP)
+    print("f_DIST:",f_DIST*w_f_DIST)
+    print("f_ATTR:",f_ATTR*w_f_ATTR)
+    print("f_SMO:",f_SMO*w_f_SMO)
     
     # The overall fitness function is obtained by combining the above criteria
-    f = (f_OUT.area*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
-   # print(f)
+    
+    f = (f_OUT*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
+    print("Total fitness function result:", f)
     return f
 
 # %% Class for storing and updating the figure's objects
@@ -269,7 +276,7 @@ if __name__ == "__main__":
     
     # in case someone tries to run it from the command-line...
     plt.ion()
-    #np.random.seed(1)
+    np.random.seed(1)
     
     #Start calculating time in order to calculate converge time
     start_time = time.time()
