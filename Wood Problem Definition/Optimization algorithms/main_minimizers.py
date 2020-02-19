@@ -20,11 +20,11 @@ from scipy.optimize import minimize
 import sys
 
 #weights of fitness function
-w_f_OUT = 250
+w_f_OUT = 500
 w_f_OVERLAP = 500
-w_f_ATTR = 0.1
-w_f_SMO = 2
-w_f_DIST = 2
+w_f_ATTR = 0.01
+w_f_SMO = 500
+w_f_DIST = 1
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:

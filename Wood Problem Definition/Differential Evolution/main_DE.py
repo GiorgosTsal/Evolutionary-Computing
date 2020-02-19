@@ -18,11 +18,11 @@ from descartes import PolygonPatch
 from Global_Local_NeighorDE import Degl
 
 # define weights of fitness function
-w_f_OUT = 650
-w_f_OVERLAP = 500
-w_f_ATTR = 1
+w_f_OUT = 1000
+w_f_OVERLAP = 1000
+w_f_ATTR = 25
 w_f_SMO = 300
-w_f_DIST = 3
+w_f_DIST = 5
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors

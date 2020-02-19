@@ -20,11 +20,11 @@ from noisyopt import minimizeCompass
 
 
 #weights of fitness function
-w_f_OUT = 250
-w_f_OVERLAP = 500
+w_f_OUT = 2000
+w_f_OVERLAP = 2000
 w_f_ATTR = 0.1
-w_f_SMO = 2
-w_f_DIST = 2
+w_f_SMO = 500
+w_f_DIST = 1
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
@@ -357,7 +357,7 @@ if __name__ == "__main__":
     # Plot remainings
     idx=0 
     fig, ax = plt.subplots(ncols=4,nrows=2, figsize=(16,9))
-    fig.canvas.set_window_title('Remainings- Polygons flag=%d from %d polygons'%(shapesF,shapesTotal))
+    fig.canvas.set_window_title('Remainings- Polygons fitted=%d from %d polygons'%(shapesF,shapesTotal))
     for i in range(0,len(Stock)):
         if i>=4:
             idx=1

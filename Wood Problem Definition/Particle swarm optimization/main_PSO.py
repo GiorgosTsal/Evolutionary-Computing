@@ -19,11 +19,11 @@ from DynNeighborPSO import DynNeighborPSO
 
 
 # define weights of fitness function
-w_f_OUT = 250
-w_f_OVERLAP = 500
-w_f_ATTR = 0.1
-w_f_SMO = 2
-w_f_DIST = 1
+w_f_OUT = 5000
+w_f_OVERLAP = 5000
+w_f_ATTR = 3
+w_f_SMO = 300
+w_f_DIST = 5
 
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
@@ -123,7 +123,7 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     # This  fitness  component is used to prevent cutting of polygons outside the boundaries of each stock
     union=shapely.ops.cascaded_union(newOrder) # the union of shapes with new positions and rotations
     f_OUT=union.difference(Stock) # the difference of union with stock
-    
+    f_OUT = f_OUT.area
     
     # the goal is to avoid overlapping the polygons cut
     # calculate the area of ​​the shapes overlapped by many shapes
@@ -168,7 +168,7 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     
     
     # The overall fitness function is obtained by combining the above criteria
-    f = (f_OUT.area*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
+    f = (f_OUT*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
    # print(f)
     return f
 # %% Class for storing and updating the figure's objects
@@ -431,13 +431,13 @@ if __name__ == "__main__":
       
     # dd/mm/YY H:M:S
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    f.write("\n =================== RESULTS ===================\n")
     f.write("\n")
     f.write("Experiment on:" + dt_string)	
     f.write("\n")
     f.write('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO))
     f.write("\n")
     #f.write()
-    f.write("\n =================== RESULTS ===================\n")
     f.write("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
 
     f.write("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
