@@ -16,13 +16,14 @@ import shapely.ops
 from descartes import PolygonPatch
 # This import registers the 3D projection, but is otherwise unused.
 from Global_Local_NeighorDE import Degl
+import sys, os
 
 # define weights of fitness function
 w_f_OUT = 1000
 w_f_OVERLAP = 1000
-w_f_ATTR = 25
+w_f_ATTR = 3
 w_f_SMO = 300
-w_f_DIST = 5
+w_f_DIST = 0.1
 # %% Simple helper class for getting matplotlib patches from shapely polygons with different face colors 
 class PlotPatchHelper:
     # a colormap with 41 colors
@@ -166,16 +167,16 @@ def ObjectiveFcn(particle,nVars,Stock,Order):
     #The criterion is maximized (fsm = 1) when the polygon is convex and the lower the values the more concave it is
     #f_SMO = 1-f_SMO
     
-    print("f_OUT:",f_OUT*w_f_OUT)
-    print("f_OVERLAP:",f_OVERLAP*w_f_OVERLAP)
-    print("f_DIST:",f_DIST*w_f_DIST)
-    print("f_ATTR:",f_ATTR*w_f_ATTR)
-    print("f_SMO:",f_SMO*w_f_SMO)
+#    print("f_OUT:",f_OUT*w_f_OUT)
+#    print("f_OVERLAP:",f_OVERLAP*w_f_OVERLAP)
+#    print("f_DIST:",f_DIST*w_f_DIST)
+#    print("f_ATTR:",f_ATTR*w_f_ATTR)
+#    print("f_SMO:",f_SMO*w_f_SMO)
     
     # The overall fitness function is obtained by combining the above criteria
     
     f = (f_OUT*w_f_OUT) + (f_OVERLAP*w_f_OVERLAP) + (f_DIST*w_f_DIST) + (f_ATTR*w_f_ATTR) + (f_SMO*w_f_SMO)
-    print("Total fitness function result:", f)
+#    print("Total fitness function result:", f)
     return f
 
 # %% Class for storing and updating the figure's objects
@@ -352,7 +353,15 @@ if __name__ == "__main__":
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,
                          Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
 
-            degl.optimize()
+         
+            while True:
+                try:
+                    degl.optimize()
+                    break
+                except:
+                    print("\nAn unexcpected error occured. Program will terminate.\nPlease try running again...")
+                    time.sleep(2)
+                    sys.exit()
             
             
             # the possible locations of the order shapes
@@ -431,8 +440,19 @@ if __name__ == "__main__":
     print("\nNumber of Iterations (avg) = (%f)"%(np.mean(iterationsList)))
     print("\n")
 
+     #=================== STORE RESULTS OF EXPERIMENTS ==========================
+    
+    MYDIR = ("results_DE")
+    CHECK_FOLDER = os.path.isdir(MYDIR)
+    
+    # If folder doesn't exist, then create it.
+    if not CHECK_FOLDER:
+        os.makedirs(MYDIR)
+        print("created folder : ", MYDIR)
+    
+
     #Write Results on file and append on each execution
-    f= open("results_degl.csv","a+")
+    f= open("results_DE/results_degl.csv","a+")
     # datetime object containing current date and time
     now = datetime.now()
       
@@ -472,7 +492,7 @@ if __name__ == "__main__":
 
     #Save figure with remainings
     import os 
-    name = "result_degl.png"
+    name = "results_DE/result_degl.png"
     if os.path.isfile(name):
         expand = 1
         while True:

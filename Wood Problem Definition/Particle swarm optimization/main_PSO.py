@@ -8,7 +8,7 @@ Created on Wed Jan 29 14:18:31 2020
 # %% Libraries
 
 from WoodProblemDefinition import Stock, Order1, Order2, Order3
-import time
+import time, os
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -16,7 +16,7 @@ import shapely
 import shapely.ops
 from descartes import PolygonPatch
 from DynNeighborPSO import DynNeighborPSO
-
+import sys
 
 # define weights of fitness function
 w_f_OUT = 5000
@@ -346,7 +346,16 @@ if __name__ == "__main__":
                          OutputFcn=outFun, UseParallel=False, MaxStallIterations=15,
                          Stock=currentStock,Order=currentOrder,remaining=currentStock,newOrder=currentOrder)
 
-            pso.optimize()
+            
+            while True:
+                try:
+                    pso.optimize()
+                    break
+                except:
+                    print("\nAn unexcpected error occured. Program will terminate.\nPlease try running again...")
+                    time.sleep(2)
+                    sys.exit()
+                       
             
             
             # the possible locations of the order shapes
@@ -424,8 +433,18 @@ if __name__ == "__main__":
     print("\nNumber of Iterations (avg) = (%f)"%(np.mean(iterationsList)))
     print("\n")
 
+    #=================== STORE RESULTS OF EXPERIMENTS ==========================
+    
+    MYDIR = ("results_PSO")
+    CHECK_FOLDER = os.path.isdir(MYDIR)
+    
+    # If folder doesn't exist, then create it.
+    if not CHECK_FOLDER:
+        os.makedirs(MYDIR)
+        print("created folder : ", MYDIR)
+    
     #Write Results on file and append on each execution
-    f= open("results_PSO.csv","a+")
+    f= open("results_PSO/results_PSO.csv","a+")
     # datetime object containing current date and time
     now = datetime.now()
       
@@ -465,7 +484,7 @@ if __name__ == "__main__":
 
     #Save figure with remainings
     import os 
-    name = "result_PSO.png"
+    name = "results_PSO/result_PSO.png"
     if os.path.isfile(name):
         expand = 1
         while True:

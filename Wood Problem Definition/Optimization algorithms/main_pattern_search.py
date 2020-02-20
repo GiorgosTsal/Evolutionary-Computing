@@ -17,7 +17,7 @@ import shapely
 import shapely.ops
 from descartes import PolygonPatch
 from noisyopt import minimizeCompass
-
+import sys
 
 #weights of fitness function
 w_f_OUT = 2000
@@ -259,8 +259,20 @@ if __name__ == "__main__":
             ubMatrix = UpperBounds
             bRangeMatrix = ubMatrix - lbMatrix
             x0= lbMatrix + np.random.rand(1,nVars) * bRangeMatrix
+            
+            res = None
+            while res is None:
+                try:
+                    # connect
+                   res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=[nVars,currentStock,currentOrder],errorcontrol=False)
+                except:
+                    print("\nAn unexcpected error occured. Program will terminate.\nPlease try running again...")
+                    time.sleep(2)
+                    sys.exit()
+            
 
-            res = minimizeCompass(ObjectiveFcn, x0=x0[0], deltatol=0.1, paired=False,args=[nVars,currentStock,currentOrder],errorcontrol=False)
+
+            
             pos = res.x
            
             # the possible locations of the order shapes
@@ -335,8 +347,19 @@ if __name__ == "__main__":
     print("\n")
 
     
+    #=================== STORE RESULTS OF EXPERIMENTS ==========================
+    
+    MYDIR = ("results_pattern_search")
+    CHECK_FOLDER = os.path.isdir(MYDIR)
+    
+    # If folder doesn't exist, then create it.
+    if not CHECK_FOLDER:
+        os.makedirs(MYDIR)
+        print("created folder : ", MYDIR)
+    
+
     #Write Results on file and append on each execution
-    f= open("results_pattern_search.csv","a+")
+    f= open("results_pattern_search/results_pattern_search.csv","a+")
     # datetime object containing current date and time
     now = datetime.now()    
     # dd/mm/YY H:M:S
@@ -369,8 +392,7 @@ if __name__ == "__main__":
         ax[idx][i%4].set_xlim(left=minx ,right=maxx)
 
     #Save figure with remainings
-
-    name = "result_pattern_search.png"
+    name = "results_pattern_search/result_pattern_search.png"
 
     if os.path.isfile(name):
         expand = 1

@@ -19,6 +19,7 @@ from descartes import PolygonPatch
 from scipy.optimize import minimize
 import sys
 
+
 #weights of fitness function
 w_f_OUT = 500
 w_f_OVERLAP = 500
@@ -179,7 +180,7 @@ if __name__ == "__main__":
     try:
         curr_method = sys.argv[1]
     except:
-        print("Main without arguments\nYou are running default mode with method = **Nelder-Mead**") 
+        print("Main without arguments.\nYou are running default mode with method **Nelder-Mead**\n") 
     
     if(curr_method==''):
         curr_method = 'Nelder-Mead'
@@ -262,7 +263,19 @@ if __name__ == "__main__":
             bounds = UpperBounds - LowerBounds
             x0 = np.random.rand(1,nVars) * bounds 
             
-            res = minimize(ObjectiveFcn, x0,args=(nVars,currentStock,currentOrder),method=curr_method, tol=1e-6, options={'maxiter': 10000, 'disp': True})
+            
+      
+            
+            res = None
+            while res is None:
+                try:
+                    # connect
+                    res = minimize(ObjectiveFcn, x0,args=(nVars,currentStock,currentOrder),method=curr_method, tol=1e-6, options={'maxiter': 10000, 'disp': True})
+                except:
+                    print("\nAn unexcpected error occured. Program will terminate.\nPlease try running again...")
+                    time.sleep(2)
+                    sys.exit()
+            
             #The optimization result represented as a OptimizeResult object. 
             #Important attributes are: x the solution array, success a Boolean flag indicating 
             #if the optimizer exited successfully and message which describes the cause of the termination. 
@@ -340,9 +353,22 @@ if __name__ == "__main__":
     print("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
     print("\n")
 
+     #=================== STORE RESULTS OF EXPERIMENTS ==========================
     
+    MYDIR = "results_" + curr_method
+#    MYDIR = [x.replace('-', '_') for x in MYDIR]
+#    # using list comprehension transform list to string
+#    MYDIR = ' '.join([str(elem) for elem in MYDIR]) 
+#    MYDIR = [x.replace(' ', '') for x in MYDIR]
+    CHECK_FOLDER = os.path.isdir(MYDIR)
+    
+    # If folder doesn't exist, then create it.
+    if not CHECK_FOLDER:
+        os.makedirs(MYDIR)
+        print("created folder : ", MYDIR)
+        
     #Write Results on file and append on each execution
-    f= open("results" + curr_method + ".csv","a+")
+    f= open(MYDIR + "/results" + curr_method + ".csv","a+")
     # datetime object containing current date and time
     now = datetime.now()    
     # dd/mm/YY H:M:S
@@ -376,7 +402,7 @@ if __name__ == "__main__":
 
     #Save figure with remainings
 
-    name = "result_" + curr_method + ".png"
+    name = MYDIR + "/result_" + curr_method + ".png"
 
     if os.path.isfile(name):
         expand = 1
