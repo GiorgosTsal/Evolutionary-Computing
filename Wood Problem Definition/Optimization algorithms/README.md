@@ -5,7 +5,7 @@
 
 To run **Simplex-Nelder-Mead** automated tests and results:
 
-* Execute ``` python main_minimizers.py ``` (default arg is 'Nelder-Mead') from the command line or ``` python main_minimizers.py "Nelder-Mead" ```.
+* Execute ``` python main_minimizers.py "Nelder-Mead" ```  or  ``` python main_minimizers.py ``` (default arg is 'Nelder-Mead') from the command line .
 
 
 To run **Limited-memory BFGS** automated tests and results:

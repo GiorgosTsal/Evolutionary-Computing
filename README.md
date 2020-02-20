@@ -8,8 +8,13 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 
 * [Particle Swarm Optimization, PSO with dynamic neighborhood topology](https://en.wikipedia.org/wiki/Particle_swarm_optimization) 
 * [Differential Evolution, DE with global and local neighborhood topologies](https://en.wikipedia.org/wiki/Differential_evolution) 
-* [Simplex algorithm](https://en.wikipedia.org/wiki/Simplex_algorithm) 
-* [Pattern search (optimization)](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) 
+
+## Use of optimization algorithms
+
+* [Simplex](https://en.wikipedia.org/wiki/Simplex_algorithm) 
+* [L-BFGS](https://en.wikipedia.org/wiki/Limited-memory_BFGS) 
+* [SLSQP](http://degenerateconic.com/slsqp/) 
+* [Pattern search](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) 
 
 ### Prerequisites
 
