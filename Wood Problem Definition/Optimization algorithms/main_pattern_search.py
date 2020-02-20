@@ -341,7 +341,7 @@ if __name__ == "__main__":
 #    f = f_OUT.area*w_f_OUT + f_OVERLAP*w_f_OVERLAP  +f_ATTR*w_f_ATTR + f_SMO*w_f_SMO
    
     
-    print('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO))
+   # print('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO))
     
     print("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))
     print("\n")
@@ -359,22 +359,24 @@ if __name__ == "__main__":
     
 
     #Write Results on file and append on each execution
-    f= open("results_pattern_search/results_pattern_search.csv","a+")
+    fname = "results_pattern_search/results_pattern_search.csv"
+    f= open(fname,"a+")
     # datetime object containing current date and time
     now = datetime.now()    
     # dd/mm/YY H:M:S
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    f.write("\n")
     f.write("Experiment on:" + dt_string)	
     f.write("\n")
-    f.write('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO))
+    f.write("\n Weights of fitness function criteria:\n")
+    f.write('w_f_OUT:{:0.2f}, w_f_OVERLAP={:0.2f}, w_f_ATTR={:0.6f}, w_f_SMO={:0.2f}, w_f_DIST={:0.2f}'.format(w_f_OUT, w_f_OVERLAP, w_f_ATTR, w_f_SMO, w_f_DIST))
     f.write("\n")
     #f.write()
-    f.write("\n =================== RESULTS ===================\n")
-    f.write("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
-    f.write("\nPolygons fitted=%d out of %d."%(shapesF,shapesTotal))         
-    f.close()
 
+    f.write("\n---- Time taken: %s seconds ----" % (time.time() - start_time))
+    f.write("\nPolygons fitted=%d out of %d.\n"%(shapesF,shapesTotal))         
+    f.write("\n\n")
+    f.close()
+    print("Results will be stored in:" +fname)  
     
 
     # Plot remainings
@@ -404,6 +406,6 @@ if __name__ == "__main__":
             else:
                 name = new_file_name
                 break
-    print("This image will be saved with name:" +name)      
+    print("This image will be saved as:" +name)      
     fig.savefig(name)
     
