@@ -1,90 +1,100 @@
-Experiment on:20/02/2020 13:59:49
+Experiment on:21/02/2020 13:44:16
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 19.020381689071655 seconds ----
+---- Time taken: 29.00077247619629 seconds ----
+Number of Iterations (avg) = (77.448276)
 Polygons fitted=17 out of 17.
 
 
-Experiment on:20/02/2020 14:00:44
+Experiment on:21/02/2020 13:44:59
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 34.54398012161255 seconds ----
+---- Time taken: 42.109657287597656 seconds ----
+Number of Iterations (avg) = (83.555556)
+Polygons fitted=17 out of 17.
+
+
+Experiment on:21/02/2020 13:45:24
+
+ Weights of fitness function criteria:
+w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
+
+---- Time taken: 23.649061918258667 seconds ----
+Number of Iterations (avg) = (82.136364)
+Polygons fitted=17 out of 17.
+
+
+Experiment on:21/02/2020 13:46:08
+
+ Weights of fitness function criteria:
+w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
+
+---- Time taken: 42.84671497344971 seconds ----
+Number of Iterations (avg) = (100.000000)
+Polygons fitted=17 out of 17.
+
+
+Experiment on:21/02/2020 13:46:47
+
+ Weights of fitness function criteria:
+w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
+
+---- Time taken: 37.76370716094971 seconds ----
+Number of Iterations (avg) = (61.764706)
 Polygons fitted=16 out of 17.
 
 
-Experiment on:20/02/2020 14:02:09
+Experiment on:21/02/2020 13:47:38
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 45.23305130004883 seconds ----
+---- Time taken: 50.09378695487976 seconds ----
+Number of Iterations (avg) = (81.625000)
 Polygons fitted=17 out of 17.
 
 
-Experiment on:20/02/2020 14:05:44
+Experiment on:21/02/2020 13:48:20
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 27.03478717803955 seconds ----
+---- Time taken: 41.43374156951904 seconds ----
+Number of Iterations (avg) = (57.395349)
+Polygons fitted=15 out of 17.
+
+
+Experiment on:21/02/2020 13:48:51
+
+ Weights of fitness function criteria:
+w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
+
+---- Time taken: 29.80706477165222 seconds ----
+Number of Iterations (avg) = (90.928571)
 Polygons fitted=17 out of 17.
 
 
-Experiment on:20/02/2020 14:06:30
+Experiment on:21/02/2020 13:49:34
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 29.959269046783447 seconds ----
+---- Time taken: 41.49462413787842 seconds ----
+Number of Iterations (avg) = (95.000000)
 Polygons fitted=17 out of 17.
 
 
-Experiment on:20/02/2020 14:07:01
+Experiment on:21/02/2020 13:50:05
 
  Weights of fitness function criteria:
 w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
 
----- Time taken: 28.140880584716797 seconds ----
-Polygons fitted=17 out of 17.
-
-
-Experiment on:20/02/2020 14:09:40
-
- Weights of fitness function criteria:
-w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
-
----- Time taken: 51.697296380996704 seconds ----
-Polygons fitted=17 out of 17.
-
-
-Experiment on:20/02/2020 14:11:15
-
- Weights of fitness function criteria:
-w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
-
----- Time taken: 39.23220229148865 seconds ----
-Polygons fitted=17 out of 17.
-
-
-Experiment on:20/02/2020 14:11:54
-
- Weights of fitness function criteria:
-w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
-
----- Time taken: 31.45393991470337 seconds ----
-Polygons fitted=16 out of 17.
-
-
-Experiment on:20/02/2020 14:12:27
-
- Weights of fitness function criteria:
-w_f_OUT:500.00, w_f_OVERLAP=500.00, w_f_ATTR=0.010000, w_f_SMO=500.00, w_f_DIST=1.00
-
----- Time taken: 24.49310541152954 seconds ----
+---- Time taken: 29.451361894607544 seconds ----
+Number of Iterations (avg) = (82.615385)
 Polygons fitted=17 out of 17.
 
 
