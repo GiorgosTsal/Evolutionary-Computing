@@ -1,4 +1,4 @@
-g# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Runs Global and Local neighbors Differential Evolution.
 
