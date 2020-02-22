@@ -46,17 +46,7 @@ Noisyopt is on PyPI so you can install it using:
 
 ## Running the tests
 
-In order to run ** Particle Swarm Optimization ** automated tests and results:
-1) Navigate to  Evolutionary-Computing/Wood Problem Definition/PSO
-
-2) Execute ``` python main.py ``` from the command line.
-
-
-In order to run ** Differential Evolution ** automated tests and results:
-1) Navigate to  Evolutionary-Computing/Wood Problem Definition/DE
-
-2) Execute ``` python main.py ``` from the command line.
-
+Each folder has a readme on how to run the programs 
 
 ## Authors
 
