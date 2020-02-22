@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Particle swarm minimization algorithm with dynamic random neighborhood topology.
-
-The DynNeighborPSO class implements a (somewhat) simplified version of the particleswarm algorithm from MATLAB's 
-Global Optimization Toolbox.
-"""
 
 import numpy as np
 import warnings
@@ -30,21 +24,20 @@ def get_Data(degl):
 
 
 class Degl:
-    """ Particle swarm minimization algorithm with dynamic random neighborhood topology.
+    """ Differential evolution algorithm DE with
+global and local neighborhood topologies).
         
-        pso = DynNeighborPSO(ObjectiveFcn, nVars, ...) creates the DynNeighborPSO object stored in variable pso and 
-            performs all swarm initialization tasks (including calling the output function once, if provided).
+           degl = Degl(ObjectiveFcn, nVars,, ...) creates the Degl object stored in variable degl and 
+            performs all initialization tasks (including calling the output function once, if provided).
         
-        pso.optimize() subsequently runs the whole iterative process.
+        degl.optimize() subsequently runs the whole iterative process.
         
-        After initialization, the pso object has the following properties that can be queried (also during the 
+        After initialization, the degl object has the following properties that can be queried (also during the 
             iterative process through the output function):
             o All the arguments passed during boject (e.g., pso.MaxIterations, pso.ObjectiveFcn,  pso.LowerBounds, 
                 etc.). See the documentation of the __init__ member below for supported options and their defaults.
             o Iteration: the current iteration. Its value is -1 after initialization 0 or greater during the iterative
                 process.
-            o Swarm: the current iteration swarm (nParticles x nVars)
-            o Velocity: the current velocity vectors (nParticles x nVars)
             o CurrentGenFitness: the current swarm's fitnesses for all particles (nParticles x 1)
             o PreviousBestPosition: the best-so-far positions found for each individual (nParticles x nVars)
             o PreviousBestFitness: the fitnesses of the best-so-far individuals (nParticles x 1)
@@ -100,14 +93,12 @@ class Degl:
             finite (NaN or +-Inf), those elements are also replaced with +-1000 respectively.
             
             The rest of the arguments are the algorithm's options:
-                o SwarmSize (default:  min(100,10*nVars)): Number of particles in the swarm, an integer greater than 1.
-                o SelfAdjustmentWeight (default: 1.49): Weighting (finite scalar) of each particle’s best position when
-                    adjusting velocity.
-                o SocialAdjustmentWeight (default: 1.49): Weighting (finite scalar) of the neighborhood’s best position 
-                    when adjusting velocity.
-                o InertiaRange (default: [0.1, 1.1]): Two-element real vector with same sign values in increasing 
-                    order. Gives the lower and upper bound of the adaptive inertia. To obtain a constant (nonadaptive) 
-                    inertia, set both elements of InertiaRange to the same value.
+                o D (default:  min(200,10*nVars)): Number of chromosomes in the population, an integer greater than 1.
+                o Nf (default: 0.1): Neighborhood size fraction
+                o alpha (default: 0.8): Scale factor.
+                o beta (default: 0.8): Scale factor.
+                o wmin (default: 0.4): Minimum weight.
+                o wmax (default: 0.8): Maximum weight.
                 o MinNeighborsFraction (default: 0.25): Minimum adaptive neighborhood size, a scalar in [0, 1].
                 o FunctionTolerance (default: 1e-6): Iterations end when the relative change in best objective function 
                     value over the last MaxStallIterations iterations is less than options.FunctionTolerance.
@@ -116,11 +107,16 @@ class Degl:
                     value over the last MaxStallIterations iterations is less than options.FunctionTolerance.
                 o OutputFcn (default: None): Output function, which is called at the end of each iteration with the 
                     iterative data and they can stop the solver. The output function must have the signature 
-                    stop = fun(pso), returning True if the iterative process must be terminated. pso is the 
-                    DynNeighborPSO object (self here). The output function is also called after swarm initialization 
+                    stop = fun(), returning True if the iterative process must be terminated. degl is the 
+                    deglObject object (self here). The output function is also called after population initialization 
                     (i.e., within this member function).
                 o UseParallel (default: False): Compute objective function in parallel when True. The latter requires
                     package joblib to be installed (i.e., pip install joplib or conda install joblib).
+                o Stock: Stock useful for fitness function calculation.
+                o Order: Order useful for fitness function calculation.
+                o Remaining: Remaining useful for fitness function calculation and plots.
+                o newOrder: The order with the transformation according to the current solution useful for fitness function calculation and plots.
+                o u: New temporary solution used in fitness calculation for u vector.
 
         """
         self.ObjectiveFcn = ObjectiveFcn
