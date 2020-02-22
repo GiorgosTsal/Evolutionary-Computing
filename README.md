@@ -18,11 +18,18 @@ Even a timber factory that receives orders to supply a certain number of pieces 
 
 ### Prerequisites
 
+You can install them using:
+
 * matplotlib
+```
+pip install matplotlib
+```
+* numpy 
+```
+pip install numpy
+```
 * numpy 
 * https://github.com/Toblerity/Shapely. (The package is based on the GEOS C ++ library, which must be installed)
-* Noisyopt: A python library for optimizing noisy functions (https://github.com/andim/noisyopt)
-
 ```
 pip install Shapely
 ```
@@ -30,7 +37,10 @@ or
 ```
 conda install -c ”conda-forge” shapely
 ```
-
+* Noisyopt: A python library for optimizing noisy functions (https://github.com/andim/noisyopt)
+```
+pip install noisyopt
+```
 * https://pypi.org/project/descartes/ . (Use geometric objects as matplotlib paths and patches)
 
 ```
@@ -40,9 +50,7 @@ or
 ```
 conda install -c conda-forge descartes 
 ```
-
-Noisyopt is on PyPI so you can install it using:
-``` pip install noisyopt ```
+`
 
 ## Running the tests
 
